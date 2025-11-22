@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        calculator: {
+          display: "hsl(var(--calculator-display))",
+          "display-text": "hsl(var(--calculator-display-text))",
+          button: "hsl(var(--calculator-button))",
+          "button-hover": "hsl(var(--calculator-button-hover))",
+          operator: "hsl(var(--calculator-operator))",
+          "operator-hover": "hsl(var(--calculator-operator-hover))",
+          equals: "hsl(var(--calculator-equals))",
+          "equals-hover": "hsl(var(--calculator-equals-hover))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
