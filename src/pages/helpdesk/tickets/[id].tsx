@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Clock, User, Tag, MessageSquare, ArrowLeft, Edit, UserPlus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Clock, User, Tag, MessageSquare, ArrowLeft, Edit, UserPlus, FileText, History, Paperclip, Link } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -50,6 +51,44 @@ export default function TicketDetail() {
         .select("*, user:users(name, email)")
         .eq("ticket_id", parseInt(ticketId!))
         .order("created_at", { ascending: true });
+      return data || [];
+    },
+    enabled: !!ticketId,
+  });
+
+  const { data: history } = useQuery({
+    queryKey: ["helpdesk-ticket-history", ticketId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("helpdesk_ticket_history")
+        .select("*, user:users(name, email)")
+        .eq("ticket_id", parseInt(ticketId!))
+        .order("timestamp", { ascending: false });
+      return data || [];
+    },
+    enabled: !!ticketId,
+  });
+
+  const { data: attachments } = useQuery({
+    queryKey: ["helpdesk-ticket-attachments", ticketId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("helpdesk_ticket_attachments")
+        .select("*, uploaded_by_user:users!helpdesk_ticket_attachments_uploaded_by_fkey(name, email)")
+        .eq("ticket_id", parseInt(ticketId!))
+        .order("uploaded_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!ticketId,
+  });
+
+  const { data: linkedProblems } = useQuery({
+    queryKey: ["helpdesk-problem-tickets", ticketId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("helpdesk_problem_tickets")
+        .select("*, problem:helpdesk_problems(id, problem_number, problem_title, status)")
+        .eq("ticket_id", parseInt(ticketId!));
       return data || [];
     },
     enabled: !!ticketId,
@@ -203,57 +242,162 @@ export default function TicketDetail() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap">{ticket.description}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+          <div className="lg:col-span-2">
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="details">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Details
+                </TabsTrigger>
+                <TabsTrigger value="comments">
+                  <MessageSquare className="h-4 w-4 mr-2" />
                   Comments ({comments?.length || 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {comments && comments.length > 0 ? (
-                  comments.map((c: any) => (
-                    <div key={c.id} className="border-b pb-4 last:border-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{c.user?.name || "Unknown"}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap">{c.comment}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No comments yet</p>
-                )}
+                </TabsTrigger>
+                <TabsTrigger value="history">
+                  <History className="h-4 w-4 mr-2" />
+                  History
+                </TabsTrigger>
+                <TabsTrigger value="attachments">
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Attachments ({attachments?.length || 0})
+                </TabsTrigger>
+                <TabsTrigger value="problems">
+                  <Link className="h-4 w-4 mr-2" />
+                  Problems ({linkedProblems?.length || 0})
+                </TabsTrigger>
+              </TabsList>
 
-                <div className="pt-4 space-y-3">
-                  <Textarea
-                    placeholder="Add a comment..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    rows={3}
-                  />
-                  <Button
-                    onClick={() => comment.trim() && addComment.mutate(comment)}
-                    disabled={!comment.trim() || addComment.isPending}
-                  >
-                    {addComment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add Comment
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <TabsContent value="details" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Description</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="whitespace-pre-wrap">{ticket.description}</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="comments" className="mt-6">
+                <Card>
+                  <CardContent className="pt-6 space-y-4">
+                    {comments && comments.length > 0 ? (
+                      comments.map((c: any) => (
+                        <div key={c.id} className="border-b pb-4 last:border-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">{c.user?.name || "Unknown"}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{c.comment}</p>
+                          {c.is_internal && (
+                            <Badge variant="secondary" className="mt-2">Internal</Badge>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No comments yet</p>
+                    )}
+
+                    <div className="pt-4 space-y-3">
+                      <Textarea
+                        placeholder="Add a comment..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        rows={3}
+                      />
+                      <Button
+                        onClick={() => comment.trim() && addComment.mutate(comment)}
+                        disabled={!comment.trim() || addComment.isPending}
+                      >
+                        {addComment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Add Comment
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="history" className="mt-6">
+                <Card>
+                  <CardContent className="pt-6 space-y-4">
+                    {history && history.length > 0 ? (
+                      history.map((h: any) => (
+                        <div key={h.id} className="border-b pb-4 last:border-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">{h.user?.name || "System"}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(h.timestamp), { addSuffix: true })}
+                            </span>
+                          </div>
+                          <p className="text-sm">
+                            <span className="font-medium">{h.field_name}:</span>{" "}
+                            <span className="text-muted-foreground">{h.old_value || "—"}</span>
+                            {" → "}
+                            <span>{h.new_value || "—"}</span>
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No history yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="attachments" className="mt-6">
+                <Card>
+                  <CardContent className="pt-6 space-y-4">
+                    {attachments && attachments.length > 0 ? (
+                      attachments.map((a: any) => (
+                        <div key={a.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                          <div className="flex items-center gap-3">
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{a.file_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Uploaded by {a.uploaded_by_user?.name || "Unknown"} •{" "}
+                                {formatDistanceToNow(new Date(a.uploaded_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={a.file_url} target="_blank" rel="noopener noreferrer">
+                              Download
+                            </a>
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No attachments</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="problems" className="mt-6">
+                <Card>
+                  <CardContent className="pt-6 space-y-4">
+                    {linkedProblems && linkedProblems.length > 0 ? (
+                      linkedProblems.map((lp: any) => (
+                        <div key={lp.id} className="border-b pb-4 last:border-0">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{lp.problem?.problem_number}</p>
+                              <p className="text-sm">{lp.problem?.problem_title}</p>
+                            </div>
+                            <Badge>{lp.problem?.status}</Badge>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No linked problems</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div className="space-y-6">
