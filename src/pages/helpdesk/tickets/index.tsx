@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Ticket, AlertTriangle, LayoutGrid, Table as TableIcon, KanbanSquare, ArrowUpDown } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Ticket, AlertTriangle, LayoutGrid, Table as TableIcon, KanbanSquare, ArrowUpDown, Settings, BarChart3, Archive, Link as LinkIcon, BookOpen, Clock, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { BulkActionsToolbar } from "@/components/helpdesk/BulkActionsToolbar";
 import { TicketTableView } from "@/components/helpdesk/TicketTableView";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow, differenceInHours } from "date-fns";
 
 export default function TicketsModule() {
   const navigate = useNavigate();
@@ -99,267 +100,390 @@ export default function TicketsModule() {
     }
   };
 
+  const getSLAStatus = (ticket: any) => {
+    if (!ticket.sla_due_date || ticket.status === 'resolved' || ticket.status === 'closed') return null;
+    
+    const now = new Date();
+    const dueDate = new Date(ticket.sla_due_date);
+    const hoursRemaining = differenceInHours(dueDate, now);
+    
+    if (hoursRemaining < 0) {
+      return { label: 'Breached', variant: 'destructive' as const, hours: Math.abs(hoursRemaining) };
+    } else if (hoursRemaining < 2) {
+      return { label: 'Critical', variant: 'destructive' as const, hours: hoursRemaining };
+    } else if (hoursRemaining < 24) {
+      return { label: 'Warning', variant: 'warning' as const, hours: hoursRemaining };
+    }
+    return { label: 'On Track', variant: 'secondary' as const, hours: hoursRemaining };
+  };
+
   return (
-    <div className="max-w-7xl space-y-6">
-      {/* Stats Cards */}
-      <TicketStatsCards />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-          <TabsList>
-            <TabsTrigger value="tickets">
-              <Ticket className="h-4 w-4 mr-2" />
-              All Tickets
-              {tickets.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {tickets.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="problems">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Problems
-              {problems.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {problems.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          
-          <div className="flex items-center gap-2 flex-wrap">
-            {activeTab === 'tickets' && (
-              <>
-                {/* Sort Controls */}
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[160px]">
-                    <ArrowUpDown className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="created_at">Created Date</SelectItem>
-                    <SelectItem value="updated_at">Updated Date</SelectItem>
-                    <SelectItem value="priority">Priority</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                  </SelectContent>
-                </Select>
-
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
                 <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                  title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/helpdesk')}
+                  className="gap-2"
                 >
-                  <ArrowUpDown className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to HelpDesk
                 </Button>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">Tickets & Problems</h1>
+              <p className="text-muted-foreground mt-1">Manage support tickets and track recurring problems</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/helpdesk/tickets/assignment-rules')} className="gap-2">
+                <Settings className="h-4 w-4" />
+                Rules
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/helpdesk/tickets/reports')} className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Reports
+              </Button>
+            </div>
+          </div>
 
-                {/* View Switcher */}
-                <div className="flex border rounded-md">
-                  <Button
-                    variant={view === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setView('list')}
-                    className="rounded-r-none"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={view === 'table' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setView('table')}
-                    className="rounded-none border-x"
-                  >
-                    <TableIcon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={view === 'kanban' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setView('kanban')}
-                    className="rounded-l-none"
-                    title="Coming Soon"
-                    disabled
-                  >
-                    <KanbanSquare className="h-4 w-4" />
-                  </Button>
-                </div>
-              </>
-            )}
-
-            <Button variant="outline" onClick={() => setCreateProblemOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Problem
+          {/* Quick Links */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <Button variant="outline" onClick={() => navigate('/helpdesk/tickets/closed-archive')} className="justify-start gap-2">
+              <Archive className="h-4 w-4" />
+              Closed Archive
             </Button>
-            <Button onClick={() => navigate('/helpdesk/new')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Ticket
+            <Button variant="outline" onClick={() => navigate('/helpdesk/tickets/linked-problems')} className="justify-start gap-2">
+              <LinkIcon className="h-4 w-4" />
+              Linked Problems
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/helpdesk/kb')} className="justify-start gap-2">
+              <BookOpen className="h-4 w-4" />
+              Knowledge Base
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/helpdesk/sla')} className="justify-start gap-2">
+              <Clock className="h-4 w-4" />
+              SLA Policies
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/helpdesk/tickets/assignment-rules')} className="justify-start gap-2">
+              <Settings className="h-4 w-4" />
+              Assignment Rules
             </Button>
           </div>
         </div>
 
-        <TabsContent value="tickets" className="mt-6 space-y-4">
-          {/* Filters */}
-          <TicketFilters onFilterChange={setFilters} activeFilters={filters} />
+        {/* Stats Cards */}
+        <TicketStatsCards />
 
-          {/* Bulk Actions */}
-          {selectedIds.length > 0 && (
-            <BulkActionsToolbar
-              selectedIds={selectedIds}
-              onClearSelection={() => setSelectedIds([])}
-            />
-          )}
-
-          {/* Tickets List/Table */}
-          {isLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading tickets...</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : tickets.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Ticket className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-2">No tickets found</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {Object.keys(filters).length > 0 
-                    ? "Try adjusting your filters" 
-                    : "Create your first ticket to get started"}
-                </p>
-                {Object.keys(filters).length === 0 && (
-                  <Button variant="outline" onClick={() => navigate('/helpdesk/new')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Ticket
-                  </Button>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+            <TabsList className="h-auto p-1">
+              <TabsTrigger value="tickets" className="gap-2">
+                <Ticket className="h-4 w-4" />
+                All Tickets
+                {tickets.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {tickets.length}
+                  </Badge>
                 )}
-              </CardContent>
-            </Card>
-          ) : view === 'table' ? (
-            <TicketTableView
-              tickets={tickets}
-              selectedIds={selectedIds}
-              onSelectTicket={handleSelectTicket}
-              onSelectAll={handleSelectAll}
-            />
-          ) : (
-            <div className="space-y-3">
-              {tickets.map((ticket: any) => (
-                <Card 
-                  key={ticket.id} 
-                  className={`hover:shadow-lg transition-shadow cursor-pointer ${
-                    selectedIds.includes(ticket.id) ? 'ring-2 ring-primary' : ''
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(ticket.id)}
-                        onChange={() => handleSelectTicket(ticket.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-1"
-                      />
-                      <div 
-                        className="flex-1"
-                        onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}
-                      >
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <Badge variant="outline" className="font-mono">
-                            {ticket.ticket_number}
-                          </Badge>
-                          <Badge className={getStatusColor(ticket.status)}>
-                            {ticket.status.replace('_', ' ')}
-                          </Badge>
-                          <Badge 
-                            className={
-                              ticket.priority === 'urgent' ? 'bg-red-500' :
-                              ticket.priority === 'high' ? 'bg-orange-500' :
-                              ticket.priority === 'medium' ? 'bg-yellow-500' :
-                              'bg-green-500'
-                            }
-                          >
-                            {ticket.priority}
-                          </Badge>
-                          {ticket.category && (
-                            <Badge variant="outline">{ticket.category.name}</Badge>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-semibold mb-1">{ticket.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {ticket.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+              </TabsTrigger>
+              <TabsTrigger value="problems" className="gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Problems
+                {problems.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {problems.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            
+            <div className="flex items-center gap-2 flex-wrap">
+              {activeTab === 'tickets' && (
+                <>
+                  {/* Sort Controls */}
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[160px]">
+                      <ArrowUpDown className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="created_at">Created Date</SelectItem>
+                      <SelectItem value="updated_at">Updated Date</SelectItem>
+                      <SelectItem value="priority">Priority</SelectItem>
+                      <SelectItem value="status">Status</SelectItem>
+                      <SelectItem value="title">Title</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-        <TabsContent value="problems" className="mt-6 space-y-4">
-          {problems.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No problems tracked</p>
-              </CardContent>
-            </Card>
-          ) : (
-            problems.map((problem: any) => (
-              <Card key={problem.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="font-mono">
-                          {problem.problem_number}
-                        </Badge>
-                        <Badge className={getStatusColor(problem.status)}>
-                          {problem.status}
-                        </Badge>
-                        {problem.priority && (
-                          <Badge 
-                            className={
-                              problem.priority === 'urgent' ? 'bg-red-500' :
-                              problem.priority === 'high' ? 'bg-orange-500' :
-                              problem.priority === 'medium' ? 'bg-yellow-500' :
-                              'bg-green-500'
-                            }
-                          >
-                            {problem.priority}
-                          </Badge>
-                        )}
-                      </div>
-                      <h3 className="text-lg font-semibold mb-1">{problem.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {problem.description?.substring(0, 200)}
-                        {problem.description?.length > 200 ? '...' : ''}
-                      </p>
-                      {problem.root_cause && (
-                        <p className="text-sm mt-2">
-                          <span className="font-medium">Root Cause:</span> {problem.root_cause}
-                        </p>
-                      )}
-                    </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                    title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                  >
+                    <ArrowUpDown className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                  </Button>
+
+                  {/* View Switcher */}
+                  <div className="flex border rounded-md">
+                    <Button
+                      variant={view === 'list' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setView('list')}
+                      className="rounded-r-none"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={view === 'table' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setView('table')}
+                      className="rounded-none border-x"
+                    >
+                      <TableIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={view === 'kanban' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setView('kanban')}
+                      className="rounded-l-none"
+                      title="Coming Soon"
+                      disabled
+                    >
+                      <KanbanSquare className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              <Button variant="outline" onClick={() => setCreateProblemOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Problem
+              </Button>
+              <Button onClick={() => navigate('/helpdesk/new')} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Ticket
+              </Button>
+            </div>
+          </div>
+
+          <TabsContent value="tickets" className="mt-6 space-y-4">
+            {/* Filters */}
+            <TicketFilters onFilterChange={setFilters} activeFilters={filters} />
+
+            {/* Bulk Actions */}
+            {selectedIds.length > 0 && (
+              <BulkActionsToolbar
+                selectedIds={selectedIds}
+                onClearSelection={() => setSelectedIds([])}
+              />
+            )}
+
+            {/* Tickets List/Table */}
+            {isLoading ? (
+              <Card>
+                <CardContent className="flex items-center justify-center py-16">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading tickets...</p>
                   </div>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
-      
-      <CreateProblemDialog 
-        open={createProblemOpen} 
-        onOpenChange={setCreateProblemOpen} 
-      />
+            ) : tickets.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Ticket className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No tickets found</h3>
+                  <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">
+                    {Object.keys(filters).length > 0 
+                      ? "Try adjusting your filters to see more tickets" 
+                      : "Get started by creating your first support ticket"}
+                  </p>
+                  {Object.keys(filters).length === 0 && (
+                    <Button onClick={() => navigate('/helpdesk/new')} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create First Ticket
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : view === 'table' ? (
+              <TicketTableView
+                tickets={tickets}
+                selectedIds={selectedIds}
+                onSelectTicket={handleSelectTicket}
+                onSelectAll={handleSelectAll}
+              />
+            ) : (
+              <div className="space-y-3">
+                {tickets.map((ticket: any) => {
+                  const slaStatus = getSLAStatus(ticket);
+                  return (
+                    <Card 
+                      key={ticket.id} 
+                      className={`hover:shadow-md transition-all cursor-pointer border ${
+                        selectedIds.includes(ticket.id) ? 'ring-2 ring-primary border-primary' : ''
+                      } ${slaStatus?.variant === 'destructive' ? 'border-l-4 border-l-destructive' : ''}`}
+                    >
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(ticket.id)}
+                            onChange={() => handleSelectTicket(ticket.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-1.5 h-4 w-4"
+                          />
+                          <div 
+                            className="flex-1 min-w-0"
+                            onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}
+                          >
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {ticket.ticket_number}
+                              </Badge>
+                              <Badge variant="secondary" className={
+                                ticket.status === 'open' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                                ticket.status === 'in_progress' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
+                                ticket.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                ticket.status === 'closed' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' :
+                                'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
+                              }>
+                                {ticket.status.replace('_', ' ')}
+                              </Badge>
+                              <Badge 
+                                className={`text-white ${
+                                  ticket.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' :
+                                  ticket.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' :
+                                  ticket.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                                  'bg-green-500 hover:bg-green-600'
+                                }`}
+                              >
+                                {ticket.priority}
+                              </Badge>
+                              {ticket.category && (
+                                <Badge variant="outline" className="text-xs">{ticket.category.name}</Badge>
+                              )}
+                              {slaStatus && (
+                                <Badge 
+                                  variant={slaStatus.variant === 'destructive' ? 'destructive' : 'secondary'}
+                                  className="gap-1"
+                                >
+                                  <Clock className="h-3 w-3" />
+                                  {slaStatus.label}: {Math.floor(slaStatus.hours)}h
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className="text-base font-semibold mb-1 truncate">{ticket.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                              {ticket.description}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                              <span>
+                                Created {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+                              </span>
+                              {ticket.assignee && (
+                                <span className="flex items-center gap-1">
+                                  <span className="text-foreground">•</span>
+                                  Assigned to <span className="text-foreground font-medium">{ticket.assignee.name}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="problems" className="mt-6 space-y-4">
+            {problems.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <AlertTriangle className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No problems tracked</h3>
+                  <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">
+                    Problems help track recurring issues and their root causes
+                  </p>
+                  <Button onClick={() => setCreateProblemOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create First Problem
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {problems.map((problem: any) => (
+                  <Card key={problem.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {problem.problem_number}
+                            </Badge>
+                            <Badge variant="secondary" className={
+                              problem.status === 'open' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                              problem.status === 'in_progress' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
+                              problem.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                              'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                            }>
+                              {problem.status}
+                            </Badge>
+                            {problem.priority && (
+                              <Badge 
+                                className={`text-white ${
+                                  problem.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' :
+                                  problem.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' :
+                                  problem.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                                  'bg-green-500 hover:bg-green-600'
+                                }`}
+                              >
+                                {problem.priority}
+                              </Badge>
+                            )}
+                          </div>
+                          <h3 className="text-base font-semibold mb-1">{problem.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                            {problem.description}
+                          </p>
+                          {problem.root_cause && (
+                            <div className="mt-3 p-3 bg-muted/50 rounded-md">
+                              <p className="text-xs font-medium mb-1">Root Cause</p>
+                              <p className="text-sm">{problem.root_cause}</p>
+                            </div>
+                          )}
+                          {problem.workaround && (
+                            <div className="mt-2 p-3 bg-muted/30 rounded-md">
+                              <p className="text-xs font-medium mb-1">Workaround</p>
+                              <p className="text-sm">{problem.workaround}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3">
+                            <span>Created {formatDistanceToNow(new Date(problem.created_at), { addSuffix: true })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+        
+        <CreateProblemDialog 
+          open={createProblemOpen} 
+          onOpenChange={setCreateProblemOpen} 
+        />
+      </div>
     </div>
   );
 }
