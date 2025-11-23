@@ -100,6 +100,7 @@ export default function TicketsModule() {
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl font-bold tracking-tight">Tickets & Problems</h1>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/helpdesk/tickets/reports')} className="gap-1.5 h-8">
                 <BarChart3 className="h-3.5 w-3.5" />
