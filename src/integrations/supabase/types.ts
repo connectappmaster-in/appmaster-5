@@ -2458,6 +2458,53 @@ export type Database = {
           },
         ]
       }
+      monitor_data: {
+        Row: {
+          cpu_usage: number | null
+          disk_usage: number | null
+          error_message: string | null
+          id: number
+          memory_usage: number | null
+          metadata: Json | null
+          monitor_id: number
+          recorded_at: string | null
+          response_time: number | null
+          status: string | null
+        }
+        Insert: {
+          cpu_usage?: number | null
+          disk_usage?: number | null
+          error_message?: string | null
+          id?: number
+          memory_usage?: number | null
+          metadata?: Json | null
+          monitor_id: number
+          recorded_at?: string | null
+          response_time?: number | null
+          status?: string | null
+        }
+        Update: {
+          cpu_usage?: number | null
+          disk_usage?: number | null
+          error_message?: string | null
+          id?: number
+          memory_usage?: number | null
+          metadata?: Json | null
+          monitor_id?: number
+          recorded_at?: string | null
+          response_time?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitor_data_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monitored_machines: {
         Row: {
           created_at: string | null
@@ -2508,6 +2555,229 @@ export type Database = {
           },
           {
             foreignKeyName: "monitored_machines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monitoring_alerts: {
+        Row: {
+          alert_type: string
+          condition: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          monitor_id: number | null
+          notification_channels: Json | null
+          organisation_id: string | null
+          service_id: number | null
+          severity: string | null
+          tenant_id: number
+          threshold: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_type: string
+          condition: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          monitor_id?: number | null
+          notification_channels?: Json | null
+          organisation_id?: string | null
+          service_id?: number | null
+          severity?: string | null
+          tenant_id: number
+          threshold?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_type?: string
+          condition?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          monitor_id?: number | null
+          notification_channels?: Json | null
+          organisation_id?: string | null
+          service_id?: number | null
+          severity?: string | null
+          tenant_id?: number
+          threshold?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitoring_alerts_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_alerts_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_alerts_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monitoring_incidents: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string | null
+          detected_at: string | null
+          id: number
+          incident_number: string
+          monitor_id: number | null
+          organisation_id: string | null
+          resolved_at: string | null
+          service_id: number | null
+          severity: string | null
+          status: string | null
+          tenant_id: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          detected_at?: string | null
+          id?: number
+          incident_number: string
+          monitor_id?: number | null
+          organisation_id?: string | null
+          resolved_at?: string | null
+          service_id?: number | null
+          severity?: string | null
+          status?: string | null
+          tenant_id: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          detected_at?: string | null
+          id?: number
+          incident_number?: string
+          monitor_id?: number | null
+          organisation_id?: string | null
+          resolved_at?: string | null
+          service_id?: number | null
+          severity?: string | null
+          status?: string | null
+          tenant_id?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitoring_incidents_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "monitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_incidents_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_incidents_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitoring_incidents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monitors: {
+        Row: {
+          check_interval: number | null
+          configuration: Json | null
+          created_at: string | null
+          created_by: string | null
+          endpoint: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          organisation_id: string | null
+          tenant_id: number
+          timeout: number | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          check_interval?: number | null
+          configuration?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          endpoint?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          organisation_id?: string | null
+          tenant_id: number
+          timeout?: number | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          check_interval?: number | null
+          configuration?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          endpoint?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          organisation_id?: string | null
+          tenant_id?: number
+          timeout?: number | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitors_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitors_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -3337,6 +3607,98 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      service_health: {
+        Row: {
+          checked_at: string | null
+          error_message: string | null
+          id: number
+          response_time: number | null
+          service_id: number
+          status: string
+        }
+        Insert: {
+          checked_at?: string | null
+          error_message?: string | null
+          id?: number
+          response_time?: number | null
+          service_id: number
+          status: string
+        }
+        Update: {
+          checked_at?: string | null
+          error_message?: string | null
+          id?: number
+          response_time?: number | null
+          service_id?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_health_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          last_check: string | null
+          name: string
+          organisation_id: string | null
+          service_type: string | null
+          status: string | null
+          tenant_id: number
+          updated_at: string | null
+          uptime_percentage: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          last_check?: string | null
+          name: string
+          organisation_id?: string | null
+          service_type?: string | null
+          status?: string | null
+          tenant_id: number
+          updated_at?: string | null
+          uptime_percentage?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          last_check?: string | null
+          name?: string
+          organisation_id?: string | null
+          service_type?: string | null
+          status?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+          uptime_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       srm_approvals: {
         Row: {
