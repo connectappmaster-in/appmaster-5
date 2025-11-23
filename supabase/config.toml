@@ -1,0 +1,28 @@
+project_id = "awuamriycpisutbfuxid"
+
+[functions.get-admin-dashboard]
+verify_jwt = true
+
+[functions.get-all-users]
+verify_jwt = true
+
+[functions.update-subscription]
+verify_jwt = true
+
+[functions.get-insights]
+verify_jwt = true
+
+[functions.get-logs]
+verify_jwt = true
+
+[functions.toggle-tool-access]
+verify_jwt = true
+
+[functions.manage-user-role]
+verify_jwt = true
+
+[functions.initialize-super-admin]
+verify_jwt = false
+
+[functions.forgot-password]
+verify_jwt = false
