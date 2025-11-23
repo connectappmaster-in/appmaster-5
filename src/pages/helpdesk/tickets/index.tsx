@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { CreateProblemDialog } from "@/components/helpdesk/CreateProblemDialog";
 export default function TicketsModule() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("tickets");
+  const [createProblemOpen, setCreateProblemOpen] = useState(false);
   const {
     data: tickets = []
   } = useQuery({
@@ -83,7 +85,7 @@ export default function TicketsModule() {
           </TabsList>
           
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setCreateProblemOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               New Problem
             </Button>
@@ -162,5 +164,10 @@ export default function TicketsModule() {
               </Card>)}
         </TabsContent>
       </Tabs>
+      
+      <CreateProblemDialog 
+        open={createProblemOpen} 
+        onOpenChange={setCreateProblemOpen} 
+      />
     </div>;
 }
