@@ -92,23 +92,51 @@ export const CreateAdHocRequestDialog = ({
         throw new Error("User data not available");
       }
 
-      // Generate request number
-      const { count } = await supabase
-        .from("srm_requests")
-        .select("*", { count: "exact", head: true })
-        .eq("tenant_id", userData.tenantId);
+      // Get or create default ad-hoc catalog item
+      const { data: adHocItem, error: catalogError } = await supabase
+        .from("srm_catalog")
+        .select("id")
+        .eq("name", "Ad-hoc Request")
+        .eq("tenant_id", userData.tenantId)
+        .maybeSingle();
 
-      const requestNumber = `SR-${String((count || 0) + 1).padStart(6, "0")}`;
+      let catalogItemId = adHocItem?.id;
+
+      if (!catalogItemId) {
+        const { data: newItem } = await supabase
+          .from("srm_catalog")
+          .insert({
+            name: "Ad-hoc Request",
+            description: "General service request without specific catalog item",
+            category: "general",
+            tenant_id: userData.tenantId,
+            organisation_id: userData.organisationId,
+            is_active: true,
+          })
+          .select("id")
+          .single();
+        catalogItemId = newItem?.id;
+      }
+
+      if (!catalogItemId) throw new Error("Failed to create catalog item");
+
+      const { data: requestNumber } = await supabase.rpc(
+        "generate_srm_request_number",
+        {
+          p_tenant_id: userData.tenantId,
+          p_org_id: userData.organisationId,
+        }
+      );
 
       const { error } = await supabase.from("srm_requests").insert({
         request_number: requestNumber,
-        title: data.title,
-        description: data.description,
-        priority: data.priority,
-        status: "pending",
-        requested_by: userData.userId,
+        catalog_item_id: catalogItemId,
+        requester_id: userData.userId,
         organisation_id: userData.organisationId,
         tenant_id: userData.tenantId,
+        additional_notes: `${data.title}\n\n${data.description}`,
+        priority: data.priority,
+        status: "pending",
       });
 
       if (error) throw error;
