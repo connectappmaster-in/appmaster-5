@@ -67,6 +67,70 @@ export type Database = {
           },
         ]
       }
+      antivirus_updates: {
+        Row: {
+          antivirus_name: string
+          created_at: string | null
+          definition_version: string
+          id: number
+          last_update: string
+          machine_id: number | null
+          organisation_id: string | null
+          scan_status: string | null
+          tenant_id: number
+          threats_detected: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          antivirus_name: string
+          created_at?: string | null
+          definition_version: string
+          id?: number
+          last_update: string
+          machine_id?: number | null
+          organisation_id?: string | null
+          scan_status?: string | null
+          tenant_id: number
+          threats_detected?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          antivirus_name?: string
+          created_at?: string | null
+          definition_version?: string
+          id?: number
+          last_update?: string
+          machine_id?: number | null
+          organisation_id?: string | null
+          scan_status?: string | null
+          tenant_id?: number
+          threats_detected?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "antivirus_updates_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "monitored_machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "antivirus_updates_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "antivirus_updates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appmaster_admins: {
         Row: {
           admin_role: string
@@ -533,6 +597,66 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      critical_systems: {
+        Row: {
+          alert_threshold: number | null
+          created_at: string | null
+          description: string | null
+          id: number
+          last_check: string | null
+          organisation_id: string | null
+          status: string | null
+          system_name: string
+          system_type: string
+          tenant_id: number
+          updated_at: string | null
+          uptime_percentage: number | null
+        }
+        Insert: {
+          alert_threshold?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          last_check?: string | null
+          organisation_id?: string | null
+          status?: string | null
+          system_name: string
+          system_type: string
+          tenant_id: number
+          updated_at?: string | null
+          uptime_percentage?: number | null
+        }
+        Update: {
+          alert_threshold?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          last_check?: string | null
+          organisation_id?: string | null
+          status?: string | null
+          system_name?: string
+          system_type?: string
+          tenant_id?: number
+          updated_at?: string | null
+          uptime_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "critical_systems_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critical_systems_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_contacts: {
         Row: {
@@ -2334,6 +2458,63 @@ export type Database = {
           },
         ]
       }
+      monitored_machines: {
+        Row: {
+          created_at: string | null
+          id: number
+          ip_address: string | null
+          last_update_check: string | null
+          machine_name: string
+          machine_type: string
+          organisation_id: string | null
+          os_version: string | null
+          tenant_id: number
+          update_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          ip_address?: string | null
+          last_update_check?: string | null
+          machine_name: string
+          machine_type?: string
+          organisation_id?: string | null
+          os_version?: string | null
+          tenant_id: number
+          update_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          ip_address?: string | null
+          last_update_check?: string | null
+          machine_name?: string
+          machine_type?: string
+          organisation_id?: string | null
+          os_version?: string | null
+          tenant_id?: number
+          update_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitored_machines_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitored_machines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -3413,9 +3594,10 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           assignee_id: string | null
-          catalog_item_id: number
+          catalog_item_id: number | null
           completed_at: string | null
           created_at: string | null
+          description: string | null
           form_data: Json | null
           id: number
           organisation_id: string | null
@@ -3424,6 +3606,7 @@ export type Database = {
           requester_id: string
           status: string
           tenant_id: number
+          title: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3432,9 +3615,10 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           assignee_id?: string | null
-          catalog_item_id: number
+          catalog_item_id?: number | null
           completed_at?: string | null
           created_at?: string | null
+          description?: string | null
           form_data?: Json | null
           id?: number
           organisation_id?: string | null
@@ -3443,6 +3627,7 @@ export type Database = {
           requester_id: string
           status?: string
           tenant_id: number
+          title?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3451,9 +3636,10 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           assignee_id?: string | null
-          catalog_item_id?: number
+          catalog_item_id?: number | null
           completed_at?: string | null
           created_at?: string | null
+          description?: string | null
           form_data?: Json | null
           id?: number
           organisation_id?: string | null
@@ -3462,6 +3648,7 @@ export type Database = {
           requester_id?: string
           status?: string
           tenant_id?: number
+          title?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -4044,6 +4231,79 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      system_updates: {
+        Row: {
+          available_version: string | null
+          created_at: string | null
+          current_version: string | null
+          id: number
+          install_date: string | null
+          machine_id: number | null
+          organisation_id: string | null
+          severity: string | null
+          status: string | null
+          tenant_id: number
+          update_kb: string | null
+          update_name: string
+          update_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          available_version?: string | null
+          created_at?: string | null
+          current_version?: string | null
+          id?: number
+          install_date?: string | null
+          machine_id?: number | null
+          organisation_id?: string | null
+          severity?: string | null
+          status?: string | null
+          tenant_id: number
+          update_kb?: string | null
+          update_name: string
+          update_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          available_version?: string | null
+          created_at?: string | null
+          current_version?: string | null
+          id?: number
+          install_date?: string | null
+          machine_id?: number | null
+          organisation_id?: string | null
+          severity?: string | null
+          status?: string | null
+          tenant_id?: number
+          update_kb?: string | null
+          update_name?: string
+          update_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_updates_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "monitored_machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_updates_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_updates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_groups: {
         Row: {
