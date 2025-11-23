@@ -96,7 +96,7 @@ export default function TicketsModule() {
     path: "/helpdesk/tickets/assignment-rules"
   }];
   return <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 max-w-7xl">
+      <div className="w-full px-6 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-6">
@@ -117,10 +117,10 @@ export default function TicketsModule() {
           </div>
 
           {/* Quick Links */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+          <div className="flex flex-wrap gap-2 mb-5">
             {quickLinks.map(link => {
             const Icon = link.icon;
-            return <Button key={link.path} variant="outline" onClick={() => navigate(link.path)} className="justify-start gap-2 h-auto py-3">
+            return <Button key={link.path} variant="outline" size="sm" onClick={() => navigate(link.path)} className="gap-2">
                   <Icon className="h-4 w-4" />
                   <span className="text-sm">{link.label}</span>
                 </Button>;
@@ -131,9 +131,9 @@ export default function TicketsModule() {
           <TicketStatsCards />
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           {/* Tabs Header with Actions */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
             <TabsList className="h-11">
               <TabsTrigger value="tickets" className="gap-2 px-6">
                 <Ticket className="h-4 w-4" />
@@ -169,7 +169,7 @@ export default function TicketsModule() {
             </div>
           </div>
 
-          <TabsContent value="tickets" className="space-y-6">
+          <TabsContent value="tickets" className="space-y-4">
             {/* Filters */}
             <TicketFilters onFilterChange={setFilters} activeFilters={filters} />
 
@@ -177,103 +177,93 @@ export default function TicketsModule() {
             {selectedIds.length > 0 && <BulkActionsToolbar selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} />}
 
             {/* Tickets Content */}
-            {isLoading ? <Card>
-                <CardContent className="flex items-center justify-center py-20">
-                  <div className="text-center space-y-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-muted-foreground">Loading tickets...</p>
-                  </div>
-                </CardContent>
-              </Card> : tickets.length === 0 ? <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-20">
-                  <div className="rounded-full bg-muted p-6 mb-4">
-                    <Ticket className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">No tickets found</h3>
-                  <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
-                    {Object.keys(filters).length > 0 ? "Try adjusting your filters to see more tickets" : "Get started by creating your first support ticket"}
-                  </p>
-                  {Object.keys(filters).length === 0 && <Button onClick={() => navigate('/helpdesk/new')} size="lg" className="gap-2">
-                      <Plus className="h-5 w-5" />
-                      Create First Ticket
-                    </Button>}
-                </CardContent>
-              </Card> : view === 'table' ? <TicketTableView tickets={tickets} selectedIds={selectedIds} onSelectTicket={handleSelectTicket} onSelectAll={handleSelectAll} /> : <div className="space-y-3">
-                {tickets.map((ticket: any) => <Card key={ticket.id} className={`hover:shadow-md transition-shadow cursor-pointer ${selectedIds.includes(ticket.id) ? 'ring-2 ring-primary' : ''} ${ticket.sla_breached ? 'border-l-4 border-l-destructive' : ''}`} onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-4">
-                        <input type="checkbox" checked={selectedIds.includes(ticket.id)} onChange={() => handleSelectTicket(ticket.id)} onClick={e => e.stopPropagation()} className="mt-1.5 h-4 w-4 rounded border-input" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <Badge variant="outline" className="font-mono">
-                              {ticket.ticket_number}
-                            </Badge>
-                            <Badge variant="secondary">
-                              {ticket.status.replace('_', ' ')}
-                            </Badge>
-                            <Badge className={ticket.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : ticket.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : ticket.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}>
-                              {ticket.priority}
-                            </Badge>
-                            {ticket.category && <Badge variant="outline">{ticket.category.name}</Badge>}
-                            {ticket.sla_breached && <Badge variant="destructive" className="gap-1">
-                                <Clock className="h-3 w-3" />
-                                SLA Breached
-                              </Badge>}
-                          </div>
-                          <h3 className="text-base font-semibold mb-2">{ticket.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {ticket.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>Created {new Date(ticket.created_at).toLocaleDateString()}</span>
-                            {ticket.assignee && <span>• Assigned to {ticket.assignee.full_name}</span>}
-                          </div>
+            {isLoading ? <div className="flex items-center justify-center py-20">
+                <div className="text-center space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-muted-foreground">Loading tickets...</p>
+                </div>
+              </div> : tickets.length === 0 ? <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-lg">
+                <div className="rounded-full bg-muted p-6 mb-4">
+                  <Ticket className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No tickets found</h3>
+                <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+                  {Object.keys(filters).length > 0 ? "Try adjusting your filters to see more tickets" : "Get started by creating your first support ticket"}
+                </p>
+                {Object.keys(filters).length === 0 && <Button onClick={() => navigate('/helpdesk/new')} size="lg" className="gap-2">
+                    <Plus className="h-5 w-5" />
+                    Create First Ticket
+                  </Button>}
+              </div> : view === 'table' ? <TicketTableView tickets={tickets} selectedIds={selectedIds} onSelectTicket={handleSelectTicket} onSelectAll={handleSelectAll} /> : <div className="space-y-2">
+                {tickets.map((ticket: any) => <div key={ticket.id} className={`hover:bg-accent/50 transition-colors cursor-pointer p-4 rounded-lg border ${selectedIds.includes(ticket.id) ? 'ring-2 ring-primary' : ''} ${ticket.sla_breached ? 'border-l-4 border-l-destructive' : ''}`} onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
+                    <div className="flex items-start gap-3">
+                      <input type="checkbox" checked={selectedIds.includes(ticket.id)} onChange={() => handleSelectTicket(ticket.id)} onClick={e => e.stopPropagation()} className="mt-1 h-4 w-4 rounded border-input" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {ticket.ticket_number}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {ticket.status.replace('_', ' ')}
+                          </Badge>
+                          <Badge className={`text-xs ${ticket.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : ticket.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : ticket.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                            {ticket.priority}
+                          </Badge>
+                          {ticket.category && <Badge variant="outline" className="text-xs">{ticket.category.name}</Badge>}
+                          {ticket.sla_breached && <Badge variant="destructive" className="gap-1 text-xs">
+                              <Clock className="h-3 w-3" />
+                              SLA Breached
+                            </Badge>}
+                        </div>
+                        <h3 className="text-sm font-semibold mb-1">{ticket.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                          {ticket.description}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>Created {new Date(ticket.created_at).toLocaleDateString()}</span>
+                          {ticket.assignee && <span>• Assigned to {ticket.assignee.full_name}</span>}
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>)}
+                    </div>
+                  </div>)}
               </div>}
           </TabsContent>
 
-          <TabsContent value="problems" className="space-y-6">
-            {problems.length === 0 ? <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-20">
-                  <div className="rounded-full bg-muted p-6 mb-4">
-                    <AlertTriangle className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">No problems found</h3>
-                  <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
-                    Create a problem record to track recurring issues and document solutions
-                  </p>
-                  <Button onClick={() => setCreateProblemOpen(true)} size="lg" className="gap-2">
-                    <Plus className="h-5 w-5" />
-                    Create First Problem
-                  </Button>
-                </CardContent>
-              </Card> : <div className="space-y-3">
-                {problems.map((problem: any) => <Card key={problem.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/helpdesk/problems/${problem.id}`)}>
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge variant="outline" className="font-mono">
-                          {problem.problem_number}
-                        </Badge>
-                        <Badge variant="secondary">
-                          {problem.status}
-                        </Badge>
-                        <Badge className={problem.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : problem.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : problem.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}>
-                          {problem.priority}
-                        </Badge>
-                      </div>
-                      <h3 className="text-base font-semibold mb-2">{problem.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                        {problem.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>Created {new Date(problem.created_at).toLocaleDateString()}</span>
-                        {problem.linked_ticket_ids && problem.linked_ticket_ids.length > 0 && <span>• {problem.linked_ticket_ids.length} linked tickets</span>}
-                      </div>
-                    </CardContent>
-                  </Card>)}
+          <TabsContent value="problems" className="space-y-4">
+            {problems.length === 0 ? <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-lg">
+                <div className="rounded-full bg-muted p-6 mb-4">
+                  <AlertTriangle className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No problems found</h3>
+                <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+                  Create a problem record to track recurring issues and document solutions
+                </p>
+                <Button onClick={() => setCreateProblemOpen(true)} size="lg" className="gap-2">
+                  <Plus className="h-5 w-5" />
+                  Create First Problem
+                </Button>
+              </div> : <div className="space-y-2">
+                {problems.map((problem: any) => <div key={problem.id} className="hover:bg-accent/50 transition-colors cursor-pointer p-4 rounded-lg border" onClick={() => navigate(`/helpdesk/problems/${problem.id}`)}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {problem.problem_number}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {problem.status}
+                      </Badge>
+                      <Badge className={`text-xs ${problem.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : problem.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : problem.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                        {problem.priority}
+                      </Badge>
+                    </div>
+                    <h3 className="text-sm font-semibold mb-1">{problem.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                      {problem.description}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>Created {new Date(problem.created_at).toLocaleDateString()}</span>
+                      {problem.linked_ticket_ids && problem.linked_ticket_ids.length > 0 && <span>• {problem.linked_ticket_ids.length} linked tickets</span>}
+                    </div>
+                  </div>)}
               </div>}
           </TabsContent>
         </Tabs>
