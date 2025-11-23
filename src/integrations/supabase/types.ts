@@ -1062,6 +1062,7 @@ export type Database = {
           description: string | null
           id: number
           is_active: boolean | null
+          is_deleted: boolean | null
           name: string
           organisation_id: string | null
           parent_id: number | null
@@ -1073,6 +1074,7 @@ export type Database = {
           description?: string | null
           id?: number
           is_active?: boolean | null
+          is_deleted?: boolean | null
           name: string
           organisation_id?: string | null
           parent_id?: number | null
@@ -1084,6 +1086,7 @@ export type Database = {
           description?: string | null
           id?: number
           is_active?: boolean | null
+          is_deleted?: boolean | null
           name?: string
           organisation_id?: string | null
           parent_id?: number | null
@@ -1481,9 +1484,13 @@ export type Database = {
           created_by: string | null
           description: string
           id: number
+          is_deleted: boolean | null
+          linked_ticket_ids: string[] | null
           organisation_id: string | null
+          permanent_fix: string | null
           priority: string | null
           problem_number: string
+          problem_title: string | null
           resolved_at: string | null
           root_cause: string | null
           solution: string | null
@@ -1491,6 +1498,7 @@ export type Database = {
           tenant_id: number
           title: string
           updated_at: string | null
+          updated_by: string | null
           workaround: string | null
         }
         Insert: {
@@ -1501,9 +1509,13 @@ export type Database = {
           created_by?: string | null
           description: string
           id?: number
+          is_deleted?: boolean | null
+          linked_ticket_ids?: string[] | null
           organisation_id?: string | null
+          permanent_fix?: string | null
           priority?: string | null
           problem_number: string
+          problem_title?: string | null
           resolved_at?: string | null
           root_cause?: string | null
           solution?: string | null
@@ -1511,6 +1523,7 @@ export type Database = {
           tenant_id: number
           title: string
           updated_at?: string | null
+          updated_by?: string | null
           workaround?: string | null
         }
         Update: {
@@ -1521,9 +1534,13 @@ export type Database = {
           created_by?: string | null
           description?: string
           id?: number
+          is_deleted?: boolean | null
+          linked_ticket_ids?: string[] | null
           organisation_id?: string | null
+          permanent_fix?: string | null
           priority?: string | null
           problem_number?: string
+          problem_title?: string | null
           resolved_at?: string | null
           root_cause?: string | null
           solution?: string | null
@@ -1531,6 +1548,7 @@ export type Database = {
           tenant_id?: number
           title?: string
           updated_at?: string | null
+          updated_by?: string | null
           workaround?: string | null
         }
         Relationships: [
@@ -1662,37 +1680,46 @@ export type Database = {
       helpdesk_sla_policies: {
         Row: {
           created_at: string | null
+          escalation_rule: Json | null
           id: number
           is_active: boolean | null
           name: string
           organisation_id: string | null
           priority: string
           resolution_time_hours: number
+          resolution_time_minutes: number | null
           response_time_hours: number
+          response_time_minutes: number | null
           tenant_id: number
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          escalation_rule?: Json | null
           id?: number
           is_active?: boolean | null
           name: string
           organisation_id?: string | null
           priority: string
           resolution_time_hours: number
+          resolution_time_minutes?: number | null
           response_time_hours: number
+          response_time_minutes?: number | null
           tenant_id: number
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          escalation_rule?: Json | null
           id?: number
           is_active?: boolean | null
           name?: string
           organisation_id?: string | null
           priority?: string
           resolution_time_hours?: number
+          resolution_time_minutes?: number | null
           response_time_hours?: number
+          response_time_minutes?: number | null
           tenant_id?: number
           updated_at?: string | null
         }
@@ -1723,6 +1750,7 @@ export type Database = {
           id: number
           tenant_id: number
           ticket_id: number
+          uploaded_at: string | null
           uploaded_by: string | null
         }
         Insert: {
@@ -1734,6 +1762,7 @@ export type Database = {
           id?: number
           tenant_id: number
           ticket_id: number
+          uploaded_at?: string | null
           uploaded_by?: string | null
         }
         Update: {
@@ -1745,6 +1774,7 @@ export type Database = {
           id?: number
           tenant_id?: number
           ticket_id?: number
+          uploaded_at?: string | null
           uploaded_by?: string | null
         }
         Relationships: [
@@ -1795,6 +1825,7 @@ export type Database = {
           tenant_id: number
           ticket_id: number
           updated_at: string | null
+          updated_by: string | null
           user_id: string
         }
         Insert: {
@@ -1806,6 +1837,7 @@ export type Database = {
           tenant_id: number
           ticket_id: number
           updated_at?: string | null
+          updated_by?: string | null
           user_id: string
         }
         Update: {
@@ -1817,6 +1849,7 @@ export type Database = {
           tenant_id?: number
           ticket_id?: number
           updated_at?: string | null
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1866,6 +1899,7 @@ export type Database = {
           old_value: string | null
           tenant_id: number
           ticket_id: number
+          timestamp: string | null
           user_id: string | null
         }
         Insert: {
@@ -1876,6 +1910,7 @@ export type Database = {
           old_value?: string | null
           tenant_id: number
           ticket_id: number
+          timestamp?: string | null
           user_id?: string | null
         }
         Update: {
@@ -1886,6 +1921,7 @@ export type Database = {
           old_value?: string | null
           tenant_id?: number
           ticket_id?: number
+          timestamp?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -1929,72 +1965,90 @@ export type Database = {
       helpdesk_tickets: {
         Row: {
           assignee_id: string | null
+          attachments: Json | null
           category_id: number | null
           closed_at: string | null
           created_at: string | null
           created_by: string | null
           description: string
           id: number
+          is_deleted: boolean | null
           organisation_id: string | null
           priority: string
           queue_id: number | null
           requester_id: string | null
+          resolution_comments: string | null
           resolved_at: string | null
           sla_breached: boolean | null
           sla_due_date: string | null
           sla_policy_id: number | null
           status: string
+          subcategory: string | null
+          tags: string[] | null
           team: string | null
           tenant_id: number
           ticket_number: string
           title: string
           updated_at: string | null
+          updated_by: string | null
         }
         Insert: {
           assignee_id?: string | null
+          attachments?: Json | null
           category_id?: number | null
           closed_at?: string | null
           created_at?: string | null
           created_by?: string | null
           description: string
           id?: number
+          is_deleted?: boolean | null
           organisation_id?: string | null
           priority?: string
           queue_id?: number | null
           requester_id?: string | null
+          resolution_comments?: string | null
           resolved_at?: string | null
           sla_breached?: boolean | null
           sla_due_date?: string | null
           sla_policy_id?: number | null
           status?: string
+          subcategory?: string | null
+          tags?: string[] | null
           team?: string | null
           tenant_id: number
           ticket_number: string
           title: string
           updated_at?: string | null
+          updated_by?: string | null
         }
         Update: {
           assignee_id?: string | null
+          attachments?: Json | null
           category_id?: number | null
           closed_at?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string
           id?: number
+          is_deleted?: boolean | null
           organisation_id?: string | null
           priority?: string
           queue_id?: number | null
           requester_id?: string | null
+          resolution_comments?: string | null
           resolved_at?: string | null
           sla_breached?: boolean | null
           sla_due_date?: string | null
           sla_policy_id?: number | null
           status?: string
+          subcategory?: string | null
+          tags?: string[] | null
           team?: string | null
           tenant_id?: number
           ticket_number?: string
           title?: string
           updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -5290,10 +5344,19 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_sla_due_date: {
+        Args: {
+          org_id?: string
+          tenant_id_param?: number
+          ticket_priority: string
+        }
+        Returns: string
+      }
       can_activate_tool: { Args: { org_id: string }; Returns: boolean }
       can_add_user: { Args: { org_id: string }; Returns: boolean }
       can_enable_tool: { Args: { org_id: string }; Returns: boolean }
       can_invite_user: { Args: { org_id: string }; Returns: boolean }
+      check_sla_breach: { Args: never; Returns: undefined }
       check_subscription_expiry: { Args: never; Returns: undefined }
       check_subscription_limit: {
         Args: { limit_type: string; org_id: string }
@@ -5430,6 +5493,10 @@ export type Database = {
       }
       is_appmaster_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      soft_delete_ticket: {
+        Args: { ticket_id_param: number }
+        Returns: undefined
+      }
       user_has_tool_access: {
         Args: { tool_key: string; user_auth_id: string }
         Returns: boolean
