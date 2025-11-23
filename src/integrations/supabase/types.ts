@@ -565,6 +565,135 @@ export type Database = {
         }
         Relationships: []
       }
+      change_approvals: {
+        Row: {
+          approver_id: string
+          change_id: string
+          comments: string | null
+          created_at: string | null
+          id: string
+          status: string | null
+          step_number: number
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          approver_id: string
+          change_id: string
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          step_number?: number
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          approver_id?: string
+          change_id?: string
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          step_number?: number
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      change_calendar: {
+        Row: {
+          change_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          scheduled_end: string
+          scheduled_start: string
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          change_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_end: string
+          scheduled_start: string
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          change_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_end?: string
+          scheduled_start?: string
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      change_requests: {
+        Row: {
+          attachments: string[] | null
+          backout_plan: string | null
+          change_calendar_date: string | null
+          change_number: string
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          impact: string | null
+          implementation_plan: string | null
+          is_deleted: boolean | null
+          linked_request_id: number | null
+          risk: string | null
+          status: string | null
+          tenant_id: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          backout_plan?: string | null
+          change_calendar_date?: string | null
+          change_number: string
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          impact?: string | null
+          implementation_plan?: string | null
+          is_deleted?: boolean | null
+          linked_request_id?: number | null
+          risk?: string | null
+          status?: string | null
+          tenant_id?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          attachments?: string[] | null
+          backout_plan?: string | null
+          change_calendar_date?: string | null
+          change_number?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          impact?: string | null
+          implementation_plan?: string | null
+          is_deleted?: boolean | null
+          linked_request_id?: number | null
+          risk?: string | null
+          status?: string | null
+          tenant_id?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           created_at: string | null
@@ -3823,6 +3952,45 @@ export type Database = {
           },
         ]
       }
+      srm_assignment_rules: {
+        Row: {
+          assign_to: string | null
+          assign_to_queue: string | null
+          conditions: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: number | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          assign_to?: string | null
+          assign_to_queue?: string | null
+          conditions?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: number | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          assign_to?: string | null
+          assign_to_queue?: string | null
+          conditions?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: number | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       srm_catalog: {
         Row: {
           auto_assign_to: string | null
@@ -3936,6 +4104,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      srm_request_approvals: {
+        Row: {
+          approver_id: string
+          comments: string | null
+          created_at: string | null
+          id: string
+          request_id: number
+          status: string | null
+          step_number: number
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          approver_id: string
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          request_id: number
+          status?: string | null
+          step_number?: number
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          approver_id?: string
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          request_id?: number
+          status?: string | null
+          step_number?: number
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       srm_request_comments: {
         Row: {
@@ -4153,6 +4357,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      srm_sla_policies: {
+        Row: {
+          created_at: string | null
+          fulfillment_time_minutes: number
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: string
+          response_time_minutes: number
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fulfillment_time_minutes: number
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority: string
+          response_time_minutes: number
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fulfillment_time_minutes?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: string
+          response_time_minutes?: number
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       subscription_plans: {
         Row: {
@@ -5377,6 +5617,10 @@ export type Database = {
       }
       generate_change_number: {
         Args: { p_org_id: string; p_tenant_id: number }
+        Returns: string
+      }
+      generate_change_request_number: {
+        Args: { p_tenant_id: number }
         Returns: string
       }
       generate_helpdesk_ticket_number: {
