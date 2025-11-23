@@ -5356,6 +5356,7 @@ export type Database = {
       can_add_user: { Args: { org_id: string }; Returns: boolean }
       can_enable_tool: { Args: { org_id: string }; Returns: boolean }
       can_invite_user: { Args: { org_id: string }; Returns: boolean }
+      check_and_flag_sla_breaches: { Args: never; Returns: undefined }
       check_sla_breach: { Args: never; Returns: undefined }
       check_subscription_expiry: { Args: never; Returns: undefined }
       check_subscription_limit: {
