@@ -96,26 +96,26 @@ export default function TicketsModule() {
     path: "/helpdesk/tickets/assignment-rules"
   }];
   return <div className="min-h-screen bg-background">
-      <div className="w-full px-4 py-3">
+      <div className="w-full px-3 py-2">
         {/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-end mb-3 gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/helpdesk/tickets/reports')} className="gap-1.5 h-8">
-              <BarChart3 className="h-3.5 w-3.5" />
-              <span className="text-sm">Reports</span>
+        <div className="mb-2">
+          <div className="flex items-center justify-end mb-2 gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => navigate('/helpdesk/tickets/reports')} className="gap-1 h-7 text-xs px-2">
+              <BarChart3 className="h-3 w-3" />
+              <span>Reports</span>
             </Button>
-            <Button size="sm" onClick={() => navigate('/helpdesk/new')} className="gap-1.5 h-8">
-              <Plus className="h-3.5 w-3.5" />
-              <span className="text-sm">New Ticket</span>
+            <Button size="sm" onClick={() => navigate('/helpdesk/new')} className="gap-1 h-7 text-xs px-2">
+              <Plus className="h-3 w-3" />
+              <span>New Ticket</span>
             </Button>
           </div>
 
           {/* Quick Links */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
+          <div className="flex flex-wrap gap-1 mb-2">
             {quickLinks.map(link => {
             const Icon = link.icon;
-            return <Button key={link.path} variant="outline" size="sm" onClick={() => navigate(link.path)} className="gap-1.5 h-7 px-2.5 text-xs">
-                  <Icon className="h-3 w-3" />
+            return <Button key={link.path} variant="outline" size="sm" onClick={() => navigate(link.path)} className="gap-1 h-6 px-2 text-[11px]">
+                  <Icon className="h-2.5 w-2.5" />
                   <span>{link.label}</span>
                 </Button>;
           })}
@@ -125,45 +125,45 @@ export default function TicketsModule() {
           <TicketStatsCards />
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
           {/* Tabs Header with Actions */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2">
-            <TabsList className="h-9">
-              <TabsTrigger value="tickets" className="gap-1.5 px-4 text-sm">
-                <Ticket className="h-3.5 w-3.5" />
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-1.5">
+            <TabsList className="h-7">
+              <TabsTrigger value="tickets" className="gap-1 px-3 text-xs">
+                <Ticket className="h-3 w-3" />
                 All Tickets
-                {tickets.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs px-1.5 py-0">
+                {tickets.length > 0 && <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
                     {tickets.length}
                   </Badge>}
               </TabsTrigger>
-              <TabsTrigger value="problems" className="gap-1.5 px-4 text-sm">
-                <AlertTriangle className="h-3.5 w-3.5" />
+              <TabsTrigger value="problems" className="gap-1 px-3 text-xs">
+                <AlertTriangle className="h-3 w-3" />
                 Problems
-                {problems.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs px-1.5 py-0">
+                {problems.length > 0 && <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
                     {problems.length}
                   </Badge>}
               </TabsTrigger>
             </TabsList>
             
-            <div className="flex items-center gap-2">
-              {activeTab === 'tickets' && <div className="flex gap-1.5">
-                  <Button variant={view === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setView('list')} className="gap-1.5 h-8 px-3">
-                    <LayoutGrid className="h-3.5 w-3.5" />
-                    <span className="text-sm">List</span>
+            <div className="flex items-center gap-1.5">
+              {activeTab === 'tickets' && <div className="flex gap-1">
+                  <Button variant={view === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setView('list')} className="gap-1 h-7 px-2 text-xs">
+                    <LayoutGrid className="h-3 w-3" />
+                    <span>List</span>
                   </Button>
-                  <Button variant={view === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setView('table')} className="gap-1.5 h-8 px-3">
-                    <TableIcon className="h-3.5 w-3.5" />
-                    <span className="text-sm">Table</span>
+                  <Button variant={view === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setView('table')} className="gap-1 h-7 px-2 text-xs">
+                    <TableIcon className="h-3 w-3" />
+                    <span>Table</span>
                   </Button>
                 </div>}
-              <Button variant="outline" size="sm" onClick={() => setCreateProblemOpen(true)} className="gap-1.5 h-8">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="text-sm">New Problem</span>
+              <Button variant="outline" size="sm" onClick={() => setCreateProblemOpen(true)} className="gap-1 h-7 px-2 text-xs">
+                <Plus className="h-3 w-3" />
+                <span>New Problem</span>
               </Button>
             </div>
           </div>
 
-          <TabsContent value="tickets" className="space-y-2">
+          <TabsContent value="tickets" className="space-y-1.5">
             {/* Filters */}
             <TicketFilters onFilterChange={setFilters} activeFilters={filters} />
 
@@ -171,49 +171,49 @@ export default function TicketsModule() {
             {selectedIds.length > 0 && <BulkActionsToolbar selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} />}
 
             {/* Tickets Content */}
-            {isLoading ? <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="text-sm text-muted-foreground">Loading tickets...</p>
+            {isLoading ? <div className="flex items-center justify-center py-8">
+                <div className="text-center space-y-1.5">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-xs text-muted-foreground">Loading tickets...</p>
                 </div>
-              </div> : tickets.length === 0 ? <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg">
-                <div className="rounded-full bg-muted p-4 mb-3">
-                  <Ticket className="h-8 w-8 text-muted-foreground" />
+              </div> : tickets.length === 0 ? <div className="flex flex-col items-center justify-center py-8 border border-dashed rounded-lg">
+                <div className="rounded-full bg-muted p-3 mb-2">
+                  <Ticket className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <h3 className="text-base font-semibold mb-1">No tickets found</h3>
-                <p className="text-xs text-muted-foreground mb-4 text-center max-w-md">
+                <h3 className="text-sm font-semibold mb-1">No tickets found</h3>
+                <p className="text-[11px] text-muted-foreground mb-3 text-center max-w-md">
                   {Object.keys(filters).length > 0 ? "Try adjusting your filters to see more tickets" : "Get started by creating your first support ticket"}
                 </p>
-                {Object.keys(filters).length === 0 && <Button onClick={() => navigate('/helpdesk/new')} size="sm" className="gap-1.5 h-8">
-                    <Plus className="h-3.5 w-3.5" />
-                    <span className="text-sm">Create First Ticket</span>
+                {Object.keys(filters).length === 0 && <Button onClick={() => navigate('/helpdesk/new')} size="sm" className="gap-1 h-7 text-xs px-2">
+                    <Plus className="h-3 w-3" />
+                    <span>Create First Ticket</span>
                   </Button>}
-              </div> : view === 'table' ? <TicketTableView tickets={tickets} selectedIds={selectedIds} onSelectTicket={handleSelectTicket} onSelectAll={handleSelectAll} /> : <div className="space-y-1.5">
-                {tickets.map((ticket: any) => <div key={ticket.id} className={`hover:bg-accent/50 transition-colors cursor-pointer p-3 rounded-md border ${selectedIds.includes(ticket.id) ? 'ring-2 ring-primary' : ''} ${ticket.sla_breached ? 'border-l-4 border-l-destructive' : ''}`} onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                    <div className="flex items-start gap-2">
-                      <input type="checkbox" checked={selectedIds.includes(ticket.id)} onChange={() => handleSelectTicket(ticket.id)} onClick={e => e.stopPropagation()} className="mt-0.5 h-3.5 w-3.5 rounded border-input" />
+              </div> : view === 'table' ? <TicketTableView tickets={tickets} selectedIds={selectedIds} onSelectTicket={handleSelectTicket} onSelectAll={handleSelectAll} /> : <div className="space-y-1">
+                {tickets.map((ticket: any) => <div key={ticket.id} className={`hover:bg-accent/50 transition-colors cursor-pointer p-2 rounded border ${selectedIds.includes(ticket.id) ? 'ring-1 ring-primary' : ''} ${ticket.sla_breached ? 'border-l-2 border-l-destructive' : ''}`} onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
+                    <div className="flex items-start gap-1.5">
+                      <input type="checkbox" checked={selectedIds.includes(ticket.id)} onChange={() => handleSelectTicket(ticket.id)} onClick={e => e.stopPropagation()} className="mt-0.5 h-3 w-3 rounded border-input" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-                          <Badge variant="outline" className="font-mono text-[10px] h-5 px-1.5">
+                        <div className="flex items-center gap-1 mb-1 flex-wrap">
+                          <Badge variant="outline" className="font-mono text-[9px] h-4 px-1">
                             {ticket.ticket_number}
                           </Badge>
-                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                          <Badge variant="secondary" className="text-[9px] h-4 px-1">
                             {ticket.status.replace('_', ' ')}
                           </Badge>
-                          <Badge className={`text-[10px] h-5 px-1.5 ${ticket.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : ticket.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : ticket.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                          <Badge className={`text-[9px] h-4 px-1 ${ticket.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : ticket.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : ticket.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
                             {ticket.priority}
                           </Badge>
-                          {ticket.category && <Badge variant="outline" className="text-[10px] h-5 px-1.5">{ticket.category.name}</Badge>}
-                          {ticket.sla_breached && <Badge variant="destructive" className="gap-1 text-[10px] h-5 px-1.5">
-                              <Clock className="h-2.5 w-2.5" />
+                          {ticket.category && <Badge variant="outline" className="text-[9px] h-4 px-1">{ticket.category.name}</Badge>}
+                          {ticket.sla_breached && <Badge variant="destructive" className="gap-0.5 text-[9px] h-4 px-1">
+                              <Clock className="h-2 w-2" />
                               SLA Breached
                             </Badge>}
                         </div>
-                        <h3 className="text-sm font-medium mb-0.5">{ticket.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+                        <h3 className="text-xs font-medium mb-0.5">{ticket.title}</h3>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1 mb-0.5">
                           {ticket.description}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                           <span>Created {new Date(ticket.created_at).toLocaleDateString()}</span>
                           {ticket.assignee && <span>• Assigned to {ticket.assignee.full_name}</span>}
                         </div>
@@ -223,37 +223,37 @@ export default function TicketsModule() {
               </div>}
           </TabsContent>
 
-          <TabsContent value="problems" className="space-y-2">
-            {problems.length === 0 ? <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg">
-                <div className="rounded-full bg-muted p-4 mb-3">
-                  <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+          <TabsContent value="problems" className="space-y-1.5">
+            {problems.length === 0 ? <div className="flex flex-col items-center justify-center py-8 border border-dashed rounded-lg">
+                <div className="rounded-full bg-muted p-3 mb-2">
+                  <AlertTriangle className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <h3 className="text-base font-semibold mb-1">No problems found</h3>
-                <p className="text-xs text-muted-foreground mb-4 text-center max-w-md">
+                <h3 className="text-sm font-semibold mb-1">No problems found</h3>
+                <p className="text-[11px] text-muted-foreground mb-3 text-center max-w-md">
                   Create a problem record to track recurring issues and document solutions
                 </p>
-                <Button onClick={() => setCreateProblemOpen(true)} size="sm" className="gap-1.5 h-8">
-                  <Plus className="h-3.5 w-3.5" />
-                  <span className="text-sm">Create First Problem</span>
+                <Button onClick={() => setCreateProblemOpen(true)} size="sm" className="gap-1 h-7 text-xs px-2">
+                  <Plus className="h-3 w-3" />
+                  <span>Create First Problem</span>
                 </Button>
-              </div> : <div className="space-y-1.5">
-                {problems.map((problem: any) => <div key={problem.id} className="hover:bg-accent/50 transition-colors cursor-pointer p-3 rounded-md border" onClick={() => navigate(`/helpdesk/problems/${problem.id}`)}>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Badge variant="outline" className="font-mono text-[10px] h-5 px-1.5">
+              </div> : <div className="space-y-1">
+                {problems.map((problem: any) => <div key={problem.id} className="hover:bg-accent/50 transition-colors cursor-pointer p-2 rounded border" onClick={() => navigate(`/helpdesk/problems/${problem.id}`)}>
+                    <div className="flex items-center gap-1 mb-1">
+                      <Badge variant="outline" className="font-mono text-[9px] h-4 px-1">
                         {problem.problem_number}
                       </Badge>
-                      <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1">
                         {problem.status}
                       </Badge>
-                      <Badge className={`text-[10px] h-5 px-1.5 ${problem.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : problem.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : problem.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                      <Badge className={`text-[9px] h-4 px-1 ${problem.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : problem.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : problem.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
                         {problem.priority}
                       </Badge>
                     </div>
-                    <h3 className="text-sm font-medium mb-0.5">{problem.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+                    <h3 className="text-xs font-medium mb-0.5">{problem.title}</h3>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 mb-0.5">
                       {problem.description}
                     </p>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                       <span>Created {new Date(problem.created_at).toLocaleDateString()}</span>
                       {problem.linked_ticket_ids && problem.linked_ticket_ids.length > 0 && <span>• {problem.linked_ticket_ids.length} linked tickets</span>}
                     </div>
