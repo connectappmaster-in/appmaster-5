@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation } from "@/contexts/OrganisationContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +17,7 @@ import { convertToINR, formatINR } from "@/lib/currencyConversion";
 export const PaymentsList = () => {
   const { organisation } = useOrganisation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -45,6 +45,31 @@ export const PaymentsList = () => {
     },
     enabled: !!organisation?.id,
   });
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!organisation?.id) return;
+
+    const channel = supabase
+      .channel('payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscriptions_payments',
+          filter: `organisation_id=eq.${organisation.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["subscriptions-payments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [organisation?.id, queryClient]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase
@@ -95,29 +120,40 @@ export const PaymentsList = () => {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-8">
-          <p className="text-center text-muted-foreground">Loading payments...</p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading payments...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex-1 flex gap-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search payments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+    <div className="space-y-2">
+      {/* Summary Bar */}
+      <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg border">
+        <Receipt className="h-4 w-4 text-primary" />
+        <div>
+          <div className="text-sm font-medium">Total Payments</div>
+          <div className="text-xs text-muted-foreground">{formatINR(totalInINR)}</div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative w-[250px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search payments..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-8"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 ml-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[120px] h-8">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -128,131 +164,115 @@ export const PaymentsList = () => {
               <SelectItem value="refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
+
+          <Button size="sm" onClick={() => setIsAddDialogOpen(true)} className="gap-1.5 h-8">
+            <Plus className="h-3.5 w-3.5" />
+            <span className="text-sm">Add Payment</span>
+          </Button>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Payment
-        </Button>
       </div>
 
-      {/* Summary Card */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Payments</p>
-              <p className="text-2xl font-bold">{formatINR(totalInINR)}</p>
-            </div>
-            <Receipt className="w-8 h-8 text-muted-foreground" />
+      {!payments || payments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg">
+          <div className="rounded-full bg-muted p-4 mb-3">
+            <Receipt className="h-8 w-8 text-muted-foreground" />
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-          <CardDescription>
-            Track subscription payments and invoices
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!payments || payments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Receipt className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No payments found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tool</TableHead>
-                    <TableHead>Amount (INR)</TableHead>
-                    <TableHead>Payment Date</TableHead>
-                    <TableHead>Billing Period</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          <h3 className="text-base font-semibold mb-1">No payments found</h3>
+          <p className="text-xs text-muted-foreground mb-4 text-center max-w-md">
+            Get started by adding your first payment
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium h-9">TOOL</TableHead>
+                <TableHead className="text-xs font-medium h-9">AMOUNT</TableHead>
+                <TableHead className="text-xs font-medium h-9">PAYMENT DATE</TableHead>
+                <TableHead className="text-xs font-medium h-9">BILLING PERIOD</TableHead>
+                <TableHead className="text-xs font-medium h-9">STATUS</TableHead>
+                <TableHead className="text-xs font-medium h-9">METHOD</TableHead>
+                <TableHead className="text-xs font-medium h-9">INVOICE</TableHead>
+                <TableHead className="text-xs font-medium h-9 text-right">ACTIONS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment) => {
+                const amountInINR = convertToINR(payment.amount, payment.currency || "INR");
+                return (
+                  <TableRow key={payment.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium text-sm py-2">
+                      {payment.subscriptions_tools?.tool_name || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium py-2">
+                      {formatINR(amountInINR)}
+                      {payment.currency !== "INR" && (
+                        <span className="text-xs text-muted-foreground block">
+                          ({payment.amount} {payment.currency})
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground py-2">
+                      {payment.payment_date
+                        ? format(new Date(payment.payment_date), "MMM d, yyyy")
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-xs py-2">
+                      {payment.billing_period_start && payment.billing_period_end ? (
+                        <>
+                          {format(new Date(payment.billing_period_start), "MMM d")} -{" "}
+                          {format(new Date(payment.billing_period_end), "MMM d, yyyy")}
+                        </>
+                      ) : "—"}
+                    </TableCell>
+                    <TableCell className="py-2">{getStatusBadge(payment.status || "pending")}</TableCell>
+                    <TableCell className="text-xs capitalize py-2">
+                      {payment.payment_method || "—"}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      {payment.invoice_url ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => window.open(payment.invoice_url, "_blank")}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Button>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right py-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(payment)}>
+                            <Edit className="h-3.5 w-3.5 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(payment.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments.map((payment) => {
-                    const amountInINR = convertToINR(payment.amount, payment.currency || "INR");
-                    return (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">
-                          {payment.subscriptions_tools?.tool_name || "N/A"}
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          {formatINR(amountInINR)}
-                          {payment.currency !== "INR" && (
-                            <span className="text-xs text-muted-foreground block">
-                              ({payment.amount} {payment.currency})
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {payment.payment_date
-                            ? format(new Date(payment.payment_date), "MMM dd, yyyy")
-                            : "-"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {payment.billing_period_start && payment.billing_period_end ? (
-                            <>
-                              {format(new Date(payment.billing_period_start), "MMM dd")} -{" "}
-                              {format(new Date(payment.billing_period_end), "MMM dd, yyyy")}
-                            </>
-                          ) : "-"}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(payment.status || "pending")}</TableCell>
-                        <TableCell className="capitalize">
-                          {payment.payment_method || "-"}
-                        </TableCell>
-                        <TableCell>
-                          {payment.invoice_url ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => window.open(payment.invoice_url, "_blank")}
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Button>
-                          ) : (
-                            "-"
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(payment)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(payment.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <AddPaymentDialog
         open={isAddDialogOpen}

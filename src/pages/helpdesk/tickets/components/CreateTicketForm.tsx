@@ -73,10 +73,12 @@ export function CreateTicketForm({ onSearchChange }: CreateTicketFormProps) {
         .eq("id", user.id)
         .maybeSingle();
 
+      const { data: orgFromFunction } = await supabase.rpc("get_user_org");
+
       return {
         id: userData.id,
-        organisation_id: userData.organisation_id,
-        tenant_id: profileData?.tenant_id || 1,
+        organisation_id: orgFromFunction || userData.organisation_id,
+        tenant_id: profileData?.tenant_id,
         profileTenantId: profileData?.tenant_id,
       };
     },
@@ -86,10 +88,13 @@ export function CreateTicketForm({ onSearchChange }: CreateTicketFormProps) {
     mutationFn: async (data: TicketFormData) => {
       if (!currentUser) throw new Error("User not found");
 
-      // Generate ticket number
+      // Use tenant_id if available, otherwise default to 1 for org users
+      const tenantId = currentUser.profileTenantId || currentUser.tenant_id || 1;
+
+      // Generate ticket number per-tenant (ignore organisation to avoid collisions across orgs)
       const { data: ticketNumber } = await supabase.rpc("generate_helpdesk_ticket_number", {
-        p_tenant_id: currentUser.profileTenantId || currentUser.tenant_id,
-        p_org_id: currentUser.organisation_id,
+        p_tenant_id: tenantId,
+        p_org_id: null as any,
       });
 
       // Insert ticket
@@ -103,8 +108,7 @@ export function CreateTicketForm({ onSearchChange }: CreateTicketFormProps) {
           category_id: parseInt(data.category_id),
           status: "open",
           requester_id: currentUser.id,
-          created_by: currentUser.id,
-          tenant_id: currentUser.profileTenantId || currentUser.tenant_id,
+          tenant_id: tenantId,
           organisation_id: currentUser.organisation_id,
         })
         .select()

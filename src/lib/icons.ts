@@ -70,20 +70,10 @@ export const TOOL_ICONS: Record<
     path: "/invoicing",
     gradient: "from-emerald-500 to-emerald-600",
   },
-  assets: {
-    icon: Briefcase,
-    path: "/assets",
-    gradient: "from-violet-500 to-violet-600",
-  },
   attendance: {
     icon: Clock,
     path: "/attendance",
     gradient: "from-amber-500 to-amber-600",
-  },
-  subscriptions: {
-    icon: Package,
-    path: "/subscriptions",
-    gradient: "from-rose-500 to-rose-600",
   },
   helpdesk: {
     icon: Ticket,

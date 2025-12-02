@@ -117,18 +117,30 @@ export const ToolAccessGuard = ({ toolKey, children }: ToolAccessGuardProps) => 
         return;
       }
 
-      // Check if user has the tool assigned
-      const { data, error } = await supabase.rpc('user_has_tool_access', {
-        user_auth_id: user.id,
-        tool_key: toolKey,
-      });
+      // For organization users, check if tool is activated for their organization
+      const { data: userData } = await supabase
+        .from('users')
+        .select('organisation_id, role')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        console.error("Error checking tool access:", error);
+      if (!userData?.organisation_id) {
         setHasAccess(false);
-      } else {
-        setHasAccess(data);
+        setIsLoading(false);
+        return;
       }
+
+      // Get organization's active tools
+      const { data: orgData } = await supabase
+        .from('organisations')
+        .select('active_tools')
+        .eq('id', userData.organisation_id)
+        .maybeSingle();
+
+      // Check if the tool is in organization's active tools list
+      const isToolActive = orgData?.active_tools?.includes(toolKey) || false;
+      
+      setHasAccess(isToolActive);
     } catch (error) {
       console.error("Error in checkAccess:", error);
       setHasAccess(false);

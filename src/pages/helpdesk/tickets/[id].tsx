@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,21 +7,50 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Clock, User, Tag, MessageSquare, ArrowLeft, Edit, UserPlus, FileText, History, Paperclip, Link } from "lucide-react";
+import { Loader2, Clock, User, Tag, MessageSquare, Edit, UserPlus, FileText, History, Paperclip, Link, Trash2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditTicketDialog } from "@/components/helpdesk/EditTicketDialog";
 import { AssignTicketDialog } from "@/components/helpdesk/AssignTicketDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function TicketDetail() {
   const { id: ticketId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [comment, setComment] = useState("");
   const [newStatus, setNewStatus] = useState("");
   const [editDialog, setEditDialog] = useState(false);
   const [assignDialog, setAssignDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Open edit or assign dialog based on URL params
+  useEffect(() => {
+    if (searchParams.get("edit") === "true") {
+      setEditDialog(true);
+      // Remove the edit param from URL
+      searchParams.delete("edit");
+      setSearchParams(searchParams, { replace: true });
+    }
+    if (searchParams.get("assign") === "true") {
+      setAssignDialog(true);
+      // Remove the assign param from URL
+      searchParams.delete("assign");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ["helpdesk-ticket", ticketId],
@@ -32,7 +61,8 @@ export default function TicketDetail() {
           *,
           requester:users!helpdesk_tickets_requester_id_fkey(name, email),
           assignee:users!helpdesk_tickets_assignee_id_fkey(name, email),
-          category:helpdesk_categories(name)
+          category:helpdesk_categories(name),
+          created_by_user:users!helpdesk_tickets_created_by_fkey(name, email)
         `)
         .eq("id", parseInt(ticketId!))
         .single();
@@ -87,11 +117,27 @@ export default function TicketDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("helpdesk_problem_tickets")
-        .select("*, problem:helpdesk_problems(id, problem_number, problem_title, status)")
+        .select("*, problem:helpdesk_problems(id, problem_number, title, status)")
         .eq("ticket_id", parseInt(ticketId!));
       return data || [];
     },
     enabled: !!ticketId,
+  });
+
+  const { data: availableProblems = [] } = useQuery({
+    queryKey: ["helpdesk-problems-for-link", ticket?.organisation_id],
+    queryFn: async () => {
+      if (!ticket?.organisation_id) return [];
+      const { data, error } = await supabase
+        .from("helpdesk_problems")
+        .select("id, problem_number, title, status")
+        .eq("organisation_id", ticket.organisation_id)
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!ticket?.organisation_id,
   });
 
   const { data: currentUser } = useQuery({
@@ -140,6 +186,117 @@ export default function TicketDetail() {
     },
   });
 
+  const [selectedProblemId, setSelectedProblemId] = useState("");
+
+  const linkProblem = useMutation({
+    mutationFn: async (problemId: string) => {
+      // Check if ticket already has a problem linked
+      if (linkedProblems && linkedProblems.length > 0) {
+        throw new Error("This ticket is already linked to a problem. Please unlink first.");
+      }
+      
+      const { error } = await supabase
+        .from("helpdesk_problem_tickets")
+        .insert({
+          ticket_id: parseInt(ticketId!),
+          problem_id: parseInt(problemId),
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Problem linked to ticket");
+      setSelectedProblemId("");
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-problem-tickets", ticketId] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to link problem");
+    },
+  });
+
+  const unlinkProblem = useMutation({
+    mutationFn: async (linkId: number) => {
+      const { error } = await supabase
+        .from("helpdesk_problem_tickets")
+        .delete()
+        .eq("id", linkId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Problem unlinked");
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-problem-tickets", ticketId] });
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to unlink problem: " + error.message);
+    },
+  });
+
+  const createProblemFromTicket = useMutation({
+    mutationFn: async () => {
+      if (!ticket) throw new Error("Ticket not found");
+      if (linkedProblems && linkedProblems.length > 0) {
+        throw new Error("This ticket is already linked to a problem");
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: currentUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (!currentUser) throw new Error("User not found");
+
+      // Generate problem number
+      const { data: problemNumber } = await supabase.rpc("generate_problem_number", {
+        p_tenant_id: ticket.tenant_id,
+        p_org_id: ticket.organisation_id,
+      });
+
+      // Create problem
+      const { data: newProblem, error: problemError } = await supabase
+        .from("helpdesk_problems")
+        .insert({
+          problem_number: problemNumber,
+          title: `Problem: ${ticket.title}`,
+          description: `Root cause analysis for ticket ${ticket.ticket_number}:\n\n${ticket.description}`,
+          priority: ticket.priority,
+          status: "investigating",
+          tenant_id: ticket.tenant_id,
+          organisation_id: ticket.organisation_id,
+          created_by: currentUser.id,
+          category_id: ticket.category_id,
+        })
+        .select()
+        .single();
+
+      if (problemError) throw problemError;
+
+      // Link ticket to problem
+      const { error: linkError } = await supabase
+        .from("helpdesk_problem_tickets")
+        .insert({
+          ticket_id: parseInt(ticketId!),
+          problem_id: newProblem.id,
+        });
+
+      if (linkError) throw linkError;
+
+      return newProblem;
+    },
+    onSuccess: (newProblem) => {
+      toast.success("Problem created and linked to ticket");
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-problem-tickets", ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-problems"] });
+      // Navigate to the new problem
+      navigate(`/helpdesk/problems/${newProblem.id}`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create problem");
+    },
+  });
+
   const updateStatus = useMutation({
     mutationFn: async (status: string) => {
       const updates: any = { status };
@@ -164,6 +321,26 @@ export default function TicketDetail() {
     },
     onError: (error: Error) => {
       toast.error("Failed to update status: " + error.message);
+    },
+  });
+
+  const deleteTicket = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("helpdesk_tickets")
+        .update({ is_deleted: true, updated_at: new Date().toISOString() })
+        .eq("id", parseInt(ticketId!));
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Ticket deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-tickets-all"] });
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-dashboard-stats"] });
+      navigate("/helpdesk/tickets");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to delete ticket: " + error.message);
     },
   });
 
@@ -195,123 +372,237 @@ export default function TicketDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4 max-w-5xl">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/helpdesk/tickets")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tickets
-          </Button>
+      <div className="w-full px-4 py-2">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Badge variant="outline" className="font-mono text-sm px-2 py-0.5 shrink-0">
+              {ticket.ticket_number}
+            </Badge>
+            <Badge className={`${getPriorityColor(ticket.priority)} text-white text-xs px-2 py-0.5 shrink-0`}>
+              {ticket.priority}
+            </Badge>
+            {ticket.category && (
+              <Badge variant="outline" className="text-xs px-2 py-0.5 shrink-0">{ticket.category.name}</Badge>
+            )}
+          </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0 items-center">
             <Button
               variant="outline"
-              onClick={() => setAssignDialog(true)}
+              size="sm"
+              onClick={() => navigate("/helpdesk/tickets")}
+              className="h-8"
             >
-              <UserPlus className="h-4 w-4 mr-2" />
+              All Tickets
+            </Button>
+            <Select
+              value={newStatus || ticket.status}
+              onValueChange={(value) => {
+                setNewStatus(value);
+                updateStatus.mutate(value);
+              }}
+            >
+              <SelectTrigger className="h-8 text-xs w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAssignDialog(true)}
+              className="h-8"
+            >
+              <UserPlus className="h-3.5 w-3.5 mr-1.5" />
               Assign
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setEditDialog(true)}
+              className="h-8"
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-3.5 w-3.5 mr-1.5" />
               Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="h-8"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Delete
             </Button>
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <Badge variant="outline" className="font-mono text-lg px-3 py-1">
-              {ticket.ticket_number}
-            </Badge>
-            <Badge className={`${getPriorityColor(ticket.priority)} text-white`}>
-              {ticket.priority}
-            </Badge>
-            {ticket.category && (
-              <Badge variant="outline">{ticket.category.name}</Badge>
-            )}
-          </div>
-          <h1 className="text-3xl font-bold mb-2">{ticket.title}</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-3">
+          <h1 className="text-xl font-bold mb-1 truncate">{ticket.title}</h1>
+          <p className="text-xs text-muted-foreground">
             Created {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="details">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Details
-                </TabsTrigger>
-                <TabsTrigger value="comments">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Comments ({comments?.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="history">
-                  <History className="h-4 w-4 mr-2" />
+        <div className="w-full">
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 h-9">
+              <TabsTrigger value="details" className="text-xs px-2 py-1.5">
+                <FileText className="h-3.5 w-3.5 mr-1" />
+                Details
+              </TabsTrigger>
+              <TabsTrigger value="comments" className="text-xs px-2 py-1.5">
+                <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                Comments ({comments?.length || 0})
+              </TabsTrigger>
+                <TabsTrigger value="history" className="text-xs px-2 py-1.5">
+                  <History className="h-3.5 w-3.5 mr-1" />
                   History
                 </TabsTrigger>
-                <TabsTrigger value="attachments">
-                  <Paperclip className="h-4 w-4 mr-2" />
+                <TabsTrigger value="attachments" className="text-xs px-2 py-1.5">
+                  <Paperclip className="h-3.5 w-3.5 mr-1" />
                   Attachments ({attachments?.length || 0})
                 </TabsTrigger>
-                <TabsTrigger value="problems">
-                  <Link className="h-4 w-4 mr-2" />
+                <TabsTrigger value="problems" className="text-xs px-2 py-1.5">
+                  <Link className="h-3.5 w-3.5 mr-1" />
                   Problems ({linkedProblems?.length || 0})
                 </TabsTrigger>
-              </TabsList>
+            </TabsList>
 
-              <TabsContent value="details" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Description</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="whitespace-pre-wrap">{ticket.description}</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+            <TabsContent value="details" className="mt-3">
+              <Card>
+                <CardContent className="pt-4 space-y-3 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Description</p>
+                    <p className="whitespace-pre-wrap text-sm">{ticket.description}</p>
+                  </div>
 
-              <TabsContent value="comments" className="mt-6">
+                  <Separator />
+
+                  {linkedProblems && linkedProblems.length > 0 && (
+                    <>
+                      <div className="bg-muted/50 p-3 rounded-lg border">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <Link className="h-4 w-4 text-primary" />
+                            <p className="font-medium text-sm">Linked Problem</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => unlinkProblem.mutate(linkedProblems[0].id)}
+                            className="h-6 px-2"
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {linkedProblems[0].problem?.problem_number}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {linkedProblems[0].problem?.status?.replace("_", " ")}
+                            </Badge>
+                          </div>
+                          <p className="text-sm">{linkedProblems[0].problem?.title}</p>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-xs"
+                            onClick={() => navigate(`/helpdesk/problems/${linkedProblems[0].problem.id}`)}
+                          >
+                            View Problem Details →
+                          </Button>
+                        </div>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+
+                  <div className="flex items-start gap-2">
+                    <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Requester</p>
+                      <p className="font-medium truncate">{ticket.requester?.name || "Unknown"}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Created by</p>
+                      <p className="font-medium truncate">{ticket.created_by_user?.name || ticket.created_by_user?.email || "Unknown"}</p>
+                    </div>
+                  </div>
+
+                  {ticket.assignee && (
+                    <div className="flex items-start gap-2">
+                      <Tag className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Assigned to</p>
+                        <p className="font-medium truncate">{ticket.assignee.name}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {ticket.sla_due_date && (
+                    <div className="flex items-start gap-2">
+                      <Clock className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">SLA Due</p>
+                        <p className="font-medium">
+                          in {formatDistanceToNow(new Date(ticket.sla_due_date))}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="comments" className="mt-3">
                 <Card>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-4 space-y-3">
                     {comments && comments.length > 0 ? (
                       comments.map((c: any) => (
-                        <div key={c.id} className="border-b pb-4 last:border-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">{c.user?.name || "Unknown"}</span>
-                            <span className="text-sm text-muted-foreground">
+                        <div key={c.id} className="border-b pb-3 last:border-0">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="font-medium text-sm">{c.user?.name || "Unknown"}</span>
+                            <span className="text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                             </span>
                           </div>
                           <p className="text-sm whitespace-pre-wrap">{c.comment}</p>
                           {c.is_internal && (
-                            <Badge variant="secondary" className="mt-2">Internal</Badge>
+                            <Badge variant="secondary" className="mt-1.5 text-xs">Internal</Badge>
                           )}
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">No comments yet</p>
+                      <p className="text-sm text-muted-foreground text-center py-3">No comments yet</p>
                     )}
 
-                    <div className="pt-4 space-y-3">
+                    <div className="pt-3 space-y-2">
                       <Textarea
                         placeholder="Add a comment..."
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        rows={3}
+                        rows={2}
+                        className="text-sm"
                       />
                       <Button
+                        size="sm"
                         onClick={() => comment.trim() && addComment.mutate(comment)}
                         disabled={!comment.trim() || addComment.isPending}
                       >
-                        {addComment.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {addComment.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
                         Add Comment
                       </Button>
                     </div>
@@ -319,15 +610,15 @@ export default function TicketDetail() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="history" className="mt-6">
+              <TabsContent value="history" className="mt-3">
                 <Card>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-4 space-y-3">
                     {history && history.length > 0 ? (
                       history.map((h: any) => (
-                        <div key={h.id} className="border-b pb-4 last:border-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">{h.user?.name || "System"}</span>
-                            <span className="text-sm text-muted-foreground">
+                        <div key={h.id} className="border-b pb-3 last:border-0">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="font-medium text-sm">{h.user?.name || "System"}</span>
+                            <span className="text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(h.timestamp), { addSuffix: true })}
                             </span>
                           </div>
@@ -340,29 +631,29 @@ export default function TicketDetail() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">No history yet</p>
+                      <p className="text-sm text-muted-foreground text-center py-3">No history yet</p>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="attachments" className="mt-6">
+              <TabsContent value="attachments" className="mt-3">
                 <Card>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-4 space-y-3">
                     {attachments && attachments.length > 0 ? (
                       attachments.map((a: any) => (
-                        <div key={a.id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                          <div className="flex items-center gap-3">
-                            <Paperclip className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">{a.file_name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Uploaded by {a.uploaded_by_user?.name || "Unknown"} •{" "}
+                        <div key={a.id} className="flex items-center justify-between border-b pb-3 last:border-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{a.file_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {a.uploaded_by_user?.name || "Unknown"} •{" "}
                                 {formatDistanceToNow(new Date(a.uploaded_at), { addSuffix: true })}
                               </p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" asChild>
+                          <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" asChild>
                             <a href={a.file_url} target="_blank" rel="noopener noreferrer">
                               Download
                             </a>
@@ -370,106 +661,120 @@ export default function TicketDetail() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">No attachments</p>
+                      <p className="text-sm text-muted-foreground text-center py-3">No attachments</p>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="problems" className="mt-6">
+              <TabsContent value="problems" className="mt-3">
                 <Card>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-4 space-y-4">
                     {linkedProblems && linkedProblems.length > 0 ? (
-                      linkedProblems.map((lp: any) => (
-                        <div key={lp.id} className="border-b pb-4 last:border-0">
-                          <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="bg-muted/50 p-4 rounded-lg border">
+                          <div className="flex items-start justify-between gap-2 mb-3">
                             <div>
-                              <p className="font-medium">{lp.problem?.problem_number}</p>
-                              <p className="text-sm">{lp.problem?.problem_title}</p>
+                              <h4 className="font-medium">Linked Problem</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                This ticket is part of a larger problem investigation
+                              </p>
                             </div>
-                            <Badge>{lp.problem?.status}</Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => unlinkProblem.mutate(linkedProblems[0].id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono">
+                                {linkedProblems[0].problem?.problem_number}
+                              </Badge>
+                              <Badge variant="outline" className="capitalize">
+                                {linkedProblems[0].problem?.status?.replace("_", " ")}
+                              </Badge>
+                            </div>
+                            <p className="font-medium">{linkedProblems[0].problem?.title}</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/helpdesk/problems/${linkedProblems[0].problem.id}`)}
+                            >
+                              View Problem Details
+                            </Button>
                           </div>
                         </div>
-                      ))
+                      </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">No linked problems</p>
+                      <div className="text-center py-6 space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          No problem linked to this ticket yet
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                          <Button
+                            variant="outline"
+                            onClick={() => createProblemFromTicket.mutate()}
+                            disabled={createProblemFromTicket.isPending}
+                          >
+                            {createProblemFromTicket.isPending && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Create Problem from Ticket
+                          </Button>
+                        </div>
+                      </div>
                     )}
+
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Link to Existing Problem</label>
+                      <p className="text-xs text-muted-foreground">
+                        Link this ticket to an existing problem if it's related to a known root cause
+                      </p>
+                      <div className="flex gap-2">
+                        <Select 
+                          value={selectedProblemId} 
+                          onValueChange={setSelectedProblemId}
+                          disabled={linkedProblems && linkedProblems.length > 0}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select a problem to link" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableProblems
+                              .filter(
+                                (problem) =>
+                                  !linkedProblems?.some((link: any) => link.problem_id === problem.id)
+                              )
+                              .map((problem) => (
+                                <SelectItem key={problem.id} value={problem.id.toString()}>
+                                  {problem.problem_number} - {problem.title}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={() => selectedProblemId && linkProblem.mutate(selectedProblemId)}
+                          disabled={!selectedProblemId || linkProblem.isPending || (linkedProblems && linkedProblems.length > 0)}
+                        >
+                          {linkProblem.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Link
+                        </Button>
+                      </div>
+                      {linkedProblems && linkedProblems.length > 0 && (
+                        <p className="text-xs text-amber-600">
+                          Unlink the current problem before linking to a different one
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Select
-                  value={newStatus || ticket.status}
-                  onValueChange={setNewStatus}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="on_hold">On Hold</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
-                {newStatus && newStatus !== ticket.status && (
-                  <Button
-                    onClick={() => updateStatus.mutate(newStatus)}
-                    disabled={updateStatus.isPending}
-                    className="w-full"
-                  >
-                    Update Status
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="text-muted-foreground">Requester</p>
-                    <p className="font-medium">{ticket.requester?.name || "Unknown"}</p>
-                  </div>
-                </div>
-
-                {ticket.assignee && (
-                  <div className="flex items-start gap-2">
-                    <Tag className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="text-muted-foreground">Assigned to</p>
-                      <p className="font-medium">{ticket.assignee.name}</p>
-                    </div>
-                  </div>
-                )}
-
-                {ticket.sla_due_date && (
-                  <div className="flex items-start gap-2">
-                    <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="text-muted-foreground">SLA Due</p>
-                      <p className="font-medium">
-                        {formatDistanceToNow(new Date(ticket.sla_due_date), { addSuffix: true })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          </Tabs>
         </div>
       </div>
 
@@ -484,6 +789,27 @@ export default function TicketDetail() {
         onOpenChange={setAssignDialog}
         ticket={ticket}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Ticket?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the ticket
+              "{ticket.title}" and all its comments.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTicket.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteTicket.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

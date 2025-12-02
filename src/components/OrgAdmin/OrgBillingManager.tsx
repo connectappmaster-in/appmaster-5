@@ -223,6 +223,10 @@ export const OrgBillingManager = () => {
                 <span className="text-muted-foreground">Organization Name:</span>
                 <p className="font-medium">{organisation.name}</p>
               </div>
+              <div>
+                <span className="text-muted-foreground">Organization ID:</span>
+                <p className="font-mono text-xs font-medium">{organisation.id}</p>
+              </div>
               {organisation.billing_email && (
                 <div>
                   <span className="text-muted-foreground">Billing Email:</span>

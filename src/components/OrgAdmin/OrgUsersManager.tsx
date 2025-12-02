@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoreHorizontal, Search, Trash2, Download, Ban, CheckCircle, UserPlus, UserCog, Wrench, Key } from "lucide-react";
+import { MoreHorizontal, Search, Trash2, Download, Ban, CheckCircle, UserPlus, UserCog, Wrench, Key, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { AssignToolsDialog } from "../SuperAdmin/AssignToolsDialog";
 import { useUserTools } from "@/hooks/useUserTools";
 import { useAuth } from "@/contexts/AuthContext";
 import { CreateUserDialog } from "./CreateUserDialog";
+import { EditUserDialog } from "./EditUserDialog";
 
 export const OrgUsersManager = () => {
   const { organisation } = useOrganisation();
@@ -34,6 +35,7 @@ export const OrgUsersManager = () => {
   const [deleteDialog, setDeleteDialog] = useState<{open: boolean, user: any | null}>({open: false, user: null});
   const [createUserDialog, setCreateUserDialog] = useState(false);
   const [assignToolsDialog, setAssignToolsDialog] = useState<{open: boolean, user: any | null}>({open: false, user: null});
+  const [editUserDialog, setEditUserDialog] = useState<{open: boolean, user: any | null}>({open: false, user: null});
   const [newRole, setNewRole] = useState("");
 
   useEffect(() => {
@@ -420,6 +422,10 @@ export const OrgUsersManager = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem onClick={() => setEditUserDialog({open: true, user})}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit User
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => {
                           setChangeRoleDialog({open: true, user});
                           setNewRole(user.role || "");
@@ -524,6 +530,14 @@ export const OrgUsersManager = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit User Dialog */}
+      <EditUserDialog
+        user={editUserDialog.user}
+        open={editUserDialog.open}
+        onOpenChange={(open) => !open && setEditUserDialog({open: false, user: null})}
+        onSuccess={fetchUsers}
+      />
 
       {/* Assign Tools Dialog */}
       {assignToolsDialog.user && currentUserId && (

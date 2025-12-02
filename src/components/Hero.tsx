@@ -1,14 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, CreditCard, FileText, Users, Ticket, Briefcase, MessageSquare } from "lucide-react";
+import { ArrowRight, BarChart3, FileText, Users, Ticket, MessageSquare } from "lucide-react";
 const Hero = () => {
   const featuredApps = [{
-    icon: Briefcase,
-    name: "Assets",
-    description: "Track business assets and calculate depreciation",
-    color: "text-green-600",
-    path: "/apps/assets"
-  }, {
     icon: Users,
     name: "Attendance",
     description: "Employee management and attendance tracking system",
@@ -32,12 +26,6 @@ const Hero = () => {
     description: "Streamline customer support with ticket management",
     color: "text-cyan-600",
     path: "/apps/helpdesk"
-  }, {
-    icon: CreditCard,
-    name: "Subscriptions",
-    description: "Manage recurring subscriptions and billing efficiently",
-    color: "text-orange-600",
-    path: "/apps/subscriptions"
   }];
   return <section className="relative pt-12 pb-8 px-4 bg-background overflow-hidden">
       {/* Animated Background Elements */}
@@ -59,7 +47,7 @@ const Hero = () => {
               </div>
               <h1 className="text-4xl font-bold text-foreground leading-tight lg:text-5xl font-display">
                 Simplify Operations,{" "}
-                <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                <span className="text-primary">
                   Amplify Growth
                 </span>
               </h1>
@@ -83,15 +71,17 @@ const Hero = () => {
             <h3 className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
               Explore Our Apps
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
               {featuredApps.map((app, index) => <Link key={index} to={app.path} className="block h-full">
                   <div className="bg-card/80 backdrop-blur-sm border border-border rounded-lg p-4 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:border-primary/50 hover:scale-105 h-full">
-                    <div className={`p-3 rounded-lg bg-background border border-border ${app.color} group-hover:scale-110 transition-transform duration-300 w-fit mb-3`}>
-                      <app.icon className="h-6 w-6" />
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`p-3 rounded-lg bg-background border border-border ${app.color} group-hover:scale-110 transition-transform duration-300`}>
+                        <app.icon className="h-6 w-6" />
+                      </div>
+                      <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                        {app.name}
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm mb-2">
-                      {app.name}
-                    </h4>
                     <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
                       {app.description}
                     </p>
@@ -101,28 +91,45 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Contact CTA Section */}
-          <div className="animate-fade-in mt-8" style={{
+          {/* Action Cards Section */}
+          <div className="animate-fade-in mt-6" style={{
           animationDelay: "0.4s"
         }}>
-            <Link to="/contact" className="block max-w-4xl mx-auto">
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 backdrop-blur-sm border border-primary/20 rounded-lg p-6 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:border-primary/50">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-lg bg-background border border-border text-primary group-hover:scale-110 transition-transform duration-300">
-                    <MessageSquare className="h-8 w-8" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+              {/* Custom Tool Request Card */}
+              <Link to="/contact" className="block h-full">
+                <div className="bg-gradient-to-r from-primary/10 to-accent/10 backdrop-blur-sm border border-primary/20 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300 group hover:border-primary/50 h-full flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-background border border-border text-primary group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                      <MessageSquare className="h-4 w-4" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                       Need a Custom Tool?
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Let's build something specific for your business needs
-                    </p>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
+                  <p className="text-xs text-muted-foreground pl-8 flex-1">
+                    Let's build something specific for your business needs
+                  </p>
                 </div>
-              </div>
-            </Link>
+              </Link>
+
+              {/* Report Issue Card */}
+              <Link to="/report-issue" className="block h-full">
+                <div className="bg-gradient-to-r from-destructive/10 to-destructive/5 backdrop-blur-sm border border-destructive/20 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300 group hover:border-destructive/50 h-full flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-background border border-border text-destructive group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                      <MessageSquare className="h-4 w-4" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-destructive transition-colors">
+                      Report an Issue
+                    </h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground pl-8 flex-1">
+                    Found a bug? Let us know and we'll fix it quickly
+                  </p>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

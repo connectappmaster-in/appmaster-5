@@ -234,6 +234,220 @@ export type Database = {
           },
         ]
       }
+      asset_contracts: {
+        Row: {
+          asset_id: number
+          contract_end: string | null
+          contract_start: string | null
+          contract_type: string | null
+          cost: number | null
+          created_at: string | null
+          document_url: string | null
+          id: string
+          notes: string | null
+          tenant_id: number
+          updated_at: string | null
+          vendor_id: number | null
+        }
+        Insert: {
+          asset_id: number
+          contract_end?: string | null
+          contract_start?: string | null
+          contract_type?: string | null
+          cost?: number | null
+          created_at?: string | null
+          document_url?: string | null
+          id?: string
+          notes?: string | null
+          tenant_id: number
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Update: {
+          asset_id?: number
+          contract_end?: string | null
+          contract_start?: string | null
+          contract_type?: string | null
+          cost?: number | null
+          created_at?: string | null
+          document_url?: string | null
+          id?: string
+          notes?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_contracts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_contracts_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "itam_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_depreciation_profiles: {
+        Row: {
+          asset_id: number
+          cost_basis: number
+          created_at: string | null
+          created_by: string | null
+          depreciation_start_date: string
+          frequency: string
+          id: string
+          is_active: boolean | null
+          is_deleted: boolean | null
+          method_id: string
+          prorate_first_period: boolean | null
+          prorate_last_period: boolean | null
+          salvage_value: number | null
+          switch_to_sl_threshold: boolean | null
+          tenant_id: number
+          updated_at: string | null
+          updated_by: string | null
+          useful_life_periods: number
+          useful_life_years: number
+        }
+        Insert: {
+          asset_id: number
+          cost_basis: number
+          created_at?: string | null
+          created_by?: string | null
+          depreciation_start_date: string
+          frequency: string
+          id?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          method_id: string
+          prorate_first_period?: boolean | null
+          prorate_last_period?: boolean | null
+          salvage_value?: number | null
+          switch_to_sl_threshold?: boolean | null
+          tenant_id: number
+          updated_at?: string | null
+          updated_by?: string | null
+          useful_life_periods: number
+          useful_life_years: number
+        }
+        Update: {
+          asset_id?: number
+          cost_basis?: number
+          created_at?: string | null
+          created_by?: string | null
+          depreciation_start_date?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          method_id?: string
+          prorate_first_period?: boolean | null
+          prorate_last_period?: boolean | null
+          salvage_value?: number | null
+          switch_to_sl_threshold?: boolean | null
+          tenant_id?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          useful_life_periods?: number
+          useful_life_years?: number
+        }
+        Relationships: []
+      }
+      asset_documents: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          document_name: string
+          document_type: string | null
+          document_url: string
+          id: string
+          tenant_id: number
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          document_name: string
+          document_type?: string | null
+          document_url: string
+          id?: string
+          tenant_id: number
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          document_name?: string
+          document_type?: string | null
+          document_url?: string
+          id?: string
+          tenant_id?: number
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_documents_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_events: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          event_description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          performed_at: string | null
+          performed_by: string | null
+          tenant_id: number
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          event_description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          performed_at?: string | null
+          performed_by?: string | null
+          tenant_id: number
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          event_description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          performed_at?: string | null
+          performed_by?: string | null
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_events_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_licenses: {
         Row: {
           cost: number | null
@@ -308,6 +522,243 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_linked_items: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          id: string
+          link_type: string | null
+          linked_asset_id: number | null
+          tenant_id: number
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          id?: string
+          link_type?: string | null
+          linked_asset_id?: number | null
+          tenant_id: number
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          id?: string
+          link_type?: string | null
+          linked_asset_id?: number | null
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_linked_items_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_linked_items_linked_asset_id_fkey"
+            columns: ["linked_asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_maintenance: {
+        Row: {
+          asset_id: number
+          cost: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          issue_description: string
+          notes: string | null
+          resolved_at: string | null
+          status: string | null
+          tenant_id: number
+          updated_at: string | null
+          vendor_id: number | null
+        }
+        Insert: {
+          asset_id: number
+          cost?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          issue_description: string
+          notes?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          tenant_id: number
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Update: {
+          asset_id?: number
+          cost?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          issue_description?: string
+          notes?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_maintenance_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_maintenance_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "itam_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_photos: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          photo_url: string
+          tenant_id: number
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          photo_url: string
+          tenant_id: number
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          photo_url?: string
+          tenant_id?: number
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_photos_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_reservations: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          id: string
+          purpose: string | null
+          reserved_by: string
+          reserved_from: string
+          reserved_to: string
+          status: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          id?: string
+          purpose?: string | null
+          reserved_by: string
+          reserved_from: string
+          reserved_to: string
+          status?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          id?: string
+          purpose?: string | null
+          reserved_by?: string
+          reserved_from?: string
+          reserved_to?: string
+          status?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_reservations_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_warranties: {
+        Row: {
+          amc_end: string | null
+          amc_start: string | null
+          asset_id: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          tenant_id: number
+          updated_at: string | null
+          warranty_end: string | null
+          warranty_start: string | null
+        }
+        Insert: {
+          amc_end?: string | null
+          amc_start?: string | null
+          asset_id: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          tenant_id: number
+          updated_at?: string | null
+          warranty_end?: string | null
+          warranty_start?: string | null
+        }
+        Update: {
+          amc_end?: string | null
+          amc_start?: string | null
+          asset_id?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+          warranty_end?: string | null
+          warranty_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_warranties_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
             referencedColumns: ["id"]
           },
         ]
@@ -565,134 +1016,56 @@ export type Database = {
         }
         Relationships: []
       }
-      change_approvals: {
+      category_tag_formats: {
         Row: {
-          approver_id: string
-          change_id: string
-          comments: string | null
+          category_id: number
           created_at: string | null
+          current_number: number
           id: string
-          status: string | null
-          step_number: number
+          organisation_id: string | null
+          prefix: string
           tenant_id: number
           updated_at: string | null
+          zero_padding: number
         }
         Insert: {
-          approver_id: string
-          change_id: string
-          comments?: string | null
+          category_id: number
           created_at?: string | null
+          current_number?: number
           id?: string
-          status?: string | null
-          step_number?: number
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Update: {
-          approver_id?: string
-          change_id?: string
-          comments?: string | null
-          created_at?: string | null
-          id?: string
-          status?: string | null
-          step_number?: number
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      change_calendar: {
-        Row: {
-          change_id: string
-          created_at: string | null
-          id: string
-          notes: string | null
-          scheduled_end: string
-          scheduled_start: string
+          organisation_id?: string | null
+          prefix: string
           tenant_id: number
-          updated_at: string | null
-        }
-        Insert: {
-          change_id: string
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          scheduled_end: string
-          scheduled_start: string
-          tenant_id?: number
           updated_at?: string | null
+          zero_padding?: number
         }
         Update: {
-          change_id?: string
+          category_id?: number
           created_at?: string | null
+          current_number?: number
           id?: string
-          notes?: string | null
-          scheduled_end?: string
-          scheduled_start?: string
+          organisation_id?: string | null
+          prefix?: string
           tenant_id?: number
           updated_at?: string | null
+          zero_padding?: number
         }
-        Relationships: []
-      }
-      change_requests: {
-        Row: {
-          attachments: string[] | null
-          backout_plan: string | null
-          change_calendar_date: string | null
-          change_number: string
-          created_at: string | null
-          created_by: string | null
-          description: string
-          id: string
-          impact: string | null
-          implementation_plan: string | null
-          is_deleted: boolean | null
-          linked_request_id: number | null
-          risk: string | null
-          status: string | null
-          tenant_id: number
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          attachments?: string[] | null
-          backout_plan?: string | null
-          change_calendar_date?: string | null
-          change_number: string
-          created_at?: string | null
-          created_by?: string | null
-          description: string
-          id?: string
-          impact?: string | null
-          implementation_plan?: string | null
-          is_deleted?: boolean | null
-          linked_request_id?: number | null
-          risk?: string | null
-          status?: string | null
-          tenant_id?: number
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          attachments?: string[] | null
-          backout_plan?: string | null
-          change_calendar_date?: string | null
-          change_number?: string
-          created_at?: string | null
-          created_by?: string | null
-          description?: string
-          id?: string
-          impact?: string | null
-          implementation_plan?: string | null
-          is_deleted?: boolean | null
-          linked_request_id?: number | null
-          risk?: string | null
-          status?: string | null
-          tenant_id?: number
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "category_tag_formats_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "itam_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_tag_formats_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_submissions: {
         Row: {
@@ -1019,57 +1392,152 @@ export type Database = {
           },
         ]
       }
+      currencies: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          symbol: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          symbol: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       depreciation_entries: {
         Row: {
+          accumulated_depreciation: number
           asset_id: number
+          book_value: number
           created_at: string | null
+          created_by: string | null
           depreciation_amount: number
-          id: number
-          organisation_id: string | null
-          period_date: string
+          entry_type: string
+          id: string
+          notes: string | null
+          period_end: string
+          period_start: string
+          posted: boolean | null
+          profile_id: string
           tenant_id: number
         }
         Insert: {
+          accumulated_depreciation: number
           asset_id: number
+          book_value: number
           created_at?: string | null
+          created_by?: string | null
           depreciation_amount: number
-          id?: never
-          organisation_id?: string | null
-          period_date: string
+          entry_type: string
+          id?: string
+          notes?: string | null
+          period_end: string
+          period_start: string
+          posted?: boolean | null
+          profile_id: string
           tenant_id: number
         }
         Update: {
+          accumulated_depreciation?: number
           asset_id?: number
+          book_value?: number
           created_at?: string | null
+          created_by?: string | null
           depreciation_amount?: number
-          id?: never
-          organisation_id?: string | null
-          period_date?: string
+          entry_type?: string
+          id?: string
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          posted?: boolean | null
+          profile_id?: string
           tenant_id?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "depreciation_entries_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "depreciation_entries_organisation_id_fkey"
-            columns: ["organisation_id"]
-            isOneToOne: false
-            referencedRelation: "organisations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "depreciation_entries_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      depreciation_methods: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parameters: Json | null
+          tenant_id: number
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parameters?: Json | null
+          tenant_id: number
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parameters?: Json | null
+          tenant_id?: number
+        }
+        Relationships: []
+      }
+      depreciation_run_logs: {
+        Row: {
+          created_at: string | null
+          entries_created: number | null
+          errors: Json | null
+          id: string
+          period_end: string
+          period_start: string
+          run_date: string | null
+          status: string
+          tenant_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          entries_created?: number | null
+          errors?: Json | null
+          id?: string
+          period_end: string
+          period_start: string
+          run_date?: string | null
+          status: string
+          tenant_id: number
+        }
+        Update: {
+          created_at?: string | null
+          entries_created?: number | null
+          errors?: Json | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          run_date?: string | null
+          status?: string
+          tenant_id?: number
+        }
+        Relationships: []
       }
       helpdesk_automation_logs: {
         Row: {
@@ -2093,18 +2561,25 @@ export type Database = {
       }
       helpdesk_tickets: {
         Row: {
+          additional_notes: string | null
           assignee_id: string | null
           attachments: Json | null
+          catalog_item_id: number | null
           category_id: number | null
           closed_at: string | null
           created_at: string | null
           created_by: string | null
           description: string
+          form_data: Json | null
+          fulfilled_at: string | null
           id: number
           is_deleted: boolean | null
           organisation_id: string | null
           priority: string
           queue_id: number | null
+          rejected_at: string | null
+          rejection_reason: string | null
+          request_type: Database["public"]["Enums"]["request_type"] | null
           requester_id: string | null
           resolution_comments: string | null
           resolved_at: string | null
@@ -2122,18 +2597,25 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          additional_notes?: string | null
           assignee_id?: string | null
           attachments?: Json | null
+          catalog_item_id?: number | null
           category_id?: number | null
           closed_at?: string | null
           created_at?: string | null
           created_by?: string | null
           description: string
+          form_data?: Json | null
+          fulfilled_at?: string | null
           id?: number
           is_deleted?: boolean | null
           organisation_id?: string | null
           priority?: string
           queue_id?: number | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          request_type?: Database["public"]["Enums"]["request_type"] | null
           requester_id?: string | null
           resolution_comments?: string | null
           resolved_at?: string | null
@@ -2151,18 +2633,25 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          additional_notes?: string | null
           assignee_id?: string | null
           attachments?: Json | null
+          catalog_item_id?: number | null
           category_id?: number | null
           closed_at?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string
+          form_data?: Json | null
+          fulfilled_at?: string | null
           id?: number
           is_deleted?: boolean | null
           organisation_id?: string | null
           priority?: string
           queue_id?: number | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          request_type?: Database["public"]["Enums"]["request_type"] | null
           requester_id?: string | null
           resolution_comments?: string | null
           resolved_at?: string | null
@@ -2579,6 +3068,1042 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      issue_reports: {
+        Row: {
+          created_at: string | null
+          description: string
+          email: string | null
+          id: string
+          phone: string | null
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      itam_asset_assignments: {
+        Row: {
+          asset_id: number
+          assigned_at: string | null
+          assigned_by: string | null
+          created_at: string | null
+          expected_return_at: string | null
+          id: number
+          is_deleted: boolean | null
+          notes: string | null
+          return_condition: string | null
+          returned_at: string | null
+          tenant_id: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: number
+          assigned_at?: string | null
+          assigned_by?: string | null
+          created_at?: string | null
+          expected_return_at?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          notes?: string | null
+          return_condition?: string | null
+          returned_at?: string | null
+          tenant_id: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: number
+          assigned_at?: string | null
+          assigned_by?: string | null
+          created_at?: string | null
+          expected_return_at?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          notes?: string | null
+          return_condition?: string | null
+          returned_at?: string | null
+          tenant_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_asset_history: {
+        Row: {
+          action: string
+          asset_id: number
+          details: Json | null
+          id: number
+          performed_at: string | null
+          performed_by: string | null
+          tenant_id: number
+        }
+        Insert: {
+          action: string
+          asset_id: number
+          details?: Json | null
+          id?: number
+          performed_at?: string | null
+          performed_by?: string | null
+          tenant_id: number
+        }
+        Update: {
+          action?: string
+          asset_id?: number
+          details?: Json | null
+          id?: number
+          performed_at?: string | null
+          performed_by?: string | null
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_asset_history_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_asset_tags: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          id: number
+          tag_type: string
+          tag_value: string
+          tenant_id: number
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          id?: number
+          tag_type: string
+          tag_value: string
+          tenant_id: number
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          id?: number
+          tag_type?: string
+          tag_value?: string
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_asset_tags_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_assets: {
+        Row: {
+          accumulated_depreciation: number | null
+          amc_end: string | null
+          asset_configuration: string | null
+          asset_id: string | null
+          asset_tag: string
+          assigned_date: string | null
+          assigned_to: string | null
+          attachments: string[] | null
+          book_value: number | null
+          brand: string | null
+          category: string | null
+          checkout_date: string | null
+          checkout_notes: string | null
+          classification: string | null
+          cost: number | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          current_depreciation_profile_id: string | null
+          department: string | null
+          depreciation_status: string | null
+          description: string | null
+          due_date: string | null
+          expected_return_date: string | null
+          hostname: string | null
+          id: number
+          is_deleted: boolean | null
+          location: string | null
+          mac_address: string | null
+          metadata: Json | null
+          model: string | null
+          name: string
+          organisation_id: string | null
+          photo_url: string | null
+          purchase_date: string | null
+          purchase_order_id: number | null
+          purchase_price: number | null
+          purchased_from: string | null
+          serial_number: string | null
+          site: string | null
+          status: string | null
+          tenant_id: number
+          type: string
+          updated_at: string | null
+          updated_by: string | null
+          vendor_id: number | null
+          warranty_end: string | null
+        }
+        Insert: {
+          accumulated_depreciation?: number | null
+          amc_end?: string | null
+          asset_configuration?: string | null
+          asset_id?: string | null
+          asset_tag: string
+          assigned_date?: string | null
+          assigned_to?: string | null
+          attachments?: string[] | null
+          book_value?: number | null
+          brand?: string | null
+          category?: string | null
+          checkout_date?: string | null
+          checkout_notes?: string | null
+          classification?: string | null
+          cost?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          current_depreciation_profile_id?: string | null
+          department?: string | null
+          depreciation_status?: string | null
+          description?: string | null
+          due_date?: string | null
+          expected_return_date?: string | null
+          hostname?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          location?: string | null
+          mac_address?: string | null
+          metadata?: Json | null
+          model?: string | null
+          name: string
+          organisation_id?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          purchase_order_id?: number | null
+          purchase_price?: number | null
+          purchased_from?: string | null
+          serial_number?: string | null
+          site?: string | null
+          status?: string | null
+          tenant_id: number
+          type: string
+          updated_at?: string | null
+          updated_by?: string | null
+          vendor_id?: number | null
+          warranty_end?: string | null
+        }
+        Update: {
+          accumulated_depreciation?: number | null
+          amc_end?: string | null
+          asset_configuration?: string | null
+          asset_id?: string | null
+          asset_tag?: string
+          assigned_date?: string | null
+          assigned_to?: string | null
+          attachments?: string[] | null
+          book_value?: number | null
+          brand?: string | null
+          category?: string | null
+          checkout_date?: string | null
+          checkout_notes?: string | null
+          classification?: string | null
+          cost?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          current_depreciation_profile_id?: string | null
+          department?: string | null
+          depreciation_status?: string | null
+          description?: string | null
+          due_date?: string | null
+          expected_return_date?: string | null
+          hostname?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          location?: string | null
+          mac_address?: string | null
+          metadata?: Json | null
+          model?: string | null
+          name?: string
+          organisation_id?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          purchase_order_id?: number | null
+          purchase_price?: number | null
+          purchased_from?: string | null
+          serial_number?: string | null
+          site?: string | null
+          status?: string | null
+          tenant_id?: number
+          type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          vendor_id?: number | null
+          warranty_end?: string | null
+        }
+        Relationships: []
+      }
+      itam_categories: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          organisation_id: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          organisation_id?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          organisation_id?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_categories_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_company_info: {
+        Row: {
+          address: string | null
+          company_code: string | null
+          company_name: string
+          created_at: string | null
+          email: string | null
+          id: string
+          organisation_id: string | null
+          phone: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_code?: string | null
+          company_name: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          organisation_id?: string | null
+          phone?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_code?: string | null
+          company_name?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          organisation_id?: string | null
+          phone?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_company_info_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_company_info_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_departments: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          organisation_id: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          organisation_id?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          organisation_id?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_departments_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_departments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_license_allocations: {
+        Row: {
+          allocated_at: string | null
+          asset_id: number | null
+          created_by: string | null
+          id: number
+          is_deleted: boolean | null
+          license_id: number
+          released_at: string | null
+          tenant_id: number
+          user_id: string | null
+        }
+        Insert: {
+          allocated_at?: string | null
+          asset_id?: number | null
+          created_by?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          license_id: number
+          released_at?: string | null
+          tenant_id: number
+          user_id?: string | null
+        }
+        Update: {
+          allocated_at?: string | null
+          asset_id?: number | null
+          created_by?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          license_id?: number
+          released_at?: string | null
+          tenant_id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_license_allocations_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_license_allocations_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "itam_licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_licenses: {
+        Row: {
+          attachments: string[] | null
+          created_at: string | null
+          expiry_date: string | null
+          id: number
+          is_deleted: boolean | null
+          license_key: string | null
+          name: string
+          notes: string | null
+          organisation_id: string | null
+          purchase_date: string | null
+          seats_allocated: number
+          seats_total: number
+          tenant_id: number
+          updated_at: string | null
+          vendor_id: number | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          license_key?: string | null
+          name: string
+          notes?: string | null
+          organisation_id?: string | null
+          purchase_date?: string | null
+          seats_allocated?: number
+          seats_total?: number
+          tenant_id: number
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Update: {
+          attachments?: string[] | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          license_key?: string | null
+          name?: string
+          notes?: string | null
+          organisation_id?: string | null
+          purchase_date?: string | null
+          seats_allocated?: number
+          seats_total?: number
+          tenant_id?: number
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_licenses_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "itam_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_locations: {
+        Row: {
+          created_at: string | null
+          floor: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          organisation_id: string | null
+          site_id: number | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          floor?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          organisation_id?: string | null
+          site_id?: number | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          floor?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          organisation_id?: string | null
+          site_id?: number | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_locations_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_locations_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "itam_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_locations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_makes: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: number
+          is_active: boolean
+          name: string
+          organisation_id: string | null
+          tenant_id: number
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          name: string
+          organisation_id?: string | null
+          tenant_id: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          name?: string
+          organisation_id?: string | null
+          tenant_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_makes_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_makes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_purchase_orders: {
+        Row: {
+          attachments: string[] | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          id: number
+          is_deleted: boolean | null
+          items: Json | null
+          ordered_date: string | null
+          organisation_id: string | null
+          po_number: string
+          received_date: string | null
+          status: string | null
+          tenant_id: number
+          total_amount: number | null
+          updated_at: string | null
+          updated_by: string | null
+          vendor_id: number | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          items?: Json | null
+          ordered_date?: string | null
+          organisation_id?: string | null
+          po_number: string
+          received_date?: string | null
+          status?: string | null
+          tenant_id: number
+          total_amount?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vendor_id?: number | null
+        }
+        Update: {
+          attachments?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          items?: Json | null
+          ordered_date?: string | null
+          organisation_id?: string | null
+          po_number?: string
+          received_date?: string | null
+          status?: string | null
+          tenant_id?: number
+          total_amount?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vendor_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_purchase_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "itam_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_repairs: {
+        Row: {
+          actual_cost: number | null
+          asset_id: number
+          attachments: string[] | null
+          created_by: string | null
+          estimated_cost: number | null
+          id: number
+          is_deleted: boolean | null
+          issue_description: string
+          opened_at: string | null
+          resolved_at: string | null
+          status: string | null
+          tenant_id: number
+          ticket_number: string | null
+          updated_at: string | null
+          vendor_id: number | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          asset_id: number
+          attachments?: string[] | null
+          created_by?: string | null
+          estimated_cost?: number | null
+          id?: number
+          is_deleted?: boolean | null
+          issue_description: string
+          opened_at?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          tenant_id: number
+          ticket_number?: string | null
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Update: {
+          actual_cost?: number | null
+          asset_id?: number
+          attachments?: string[] | null
+          created_by?: string | null
+          estimated_cost?: number | null
+          id?: number
+          is_deleted?: boolean | null
+          issue_description?: string
+          opened_at?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          tenant_id?: number
+          ticket_number?: string | null
+          updated_at?: string | null
+          vendor_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_repairs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "itam_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_repairs_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "itam_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_settings: {
+        Row: {
+          id: number
+          key: string
+          tenant_id: number
+          value: Json | null
+        }
+        Insert: {
+          id?: number
+          key: string
+          tenant_id: number
+          value?: Json | null
+        }
+        Update: {
+          id?: number
+          key?: string
+          tenant_id?: number
+          value?: Json | null
+        }
+        Relationships: []
+      }
+      itam_sites: {
+        Row: {
+          address: string | null
+          code: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          organisation_id: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          code: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          organisation_id?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          code?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          organisation_id?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_sites_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_sites_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_tag_format: {
+        Row: {
+          auto_increment: boolean
+          created_at: string | null
+          id: string
+          organisation_id: string | null
+          padding_length: number
+          prefix: string
+          start_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_increment?: boolean
+          created_at?: string | null
+          id?: string
+          organisation_id?: string | null
+          padding_length?: number
+          prefix?: string
+          start_number?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_increment?: boolean
+          created_at?: string | null
+          id?: string
+          organisation_id?: string | null
+          padding_length?: number
+          prefix?: string
+          start_number?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_tag_format_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_tag_series: {
+        Row: {
+          category_name: string
+          created_at: string | null
+          current_number: number | null
+          id: string
+          is_active: boolean | null
+          organisation_id: string | null
+          padding_length: number | null
+          prefix: string
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          category_name: string
+          created_at?: string | null
+          current_number?: number | null
+          id?: string
+          is_active?: boolean | null
+          organisation_id?: string | null
+          padding_length?: number | null
+          prefix: string
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          category_name?: string
+          created_at?: string | null
+          current_number?: number | null
+          id?: string
+          is_active?: boolean | null
+          organisation_id?: string | null
+          padding_length?: number | null
+          prefix?: string
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itam_tag_series_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itam_tag_series_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itam_vendors: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: number
+          is_deleted: boolean | null
+          name: string
+          notes: string | null
+          organisation_id: string | null
+          tenant_id: number
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          name: string
+          notes?: string | null
+          organisation_id?: string | null
+          tenant_id: number
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: number
+          is_deleted?: boolean | null
+          name?: string
+          notes?: string | null
+          organisation_id?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
       }
       license_assignments: {
         Row: {
@@ -3937,13 +5462,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "srm_approvals_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "srm_requests"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "srm_approvals_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -3952,411 +5470,32 @@ export type Database = {
           },
         ]
       }
-      srm_assignment_rules: {
-        Row: {
-          assign_to: string | null
-          assign_to_queue: string | null
-          conditions: Json | null
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-          priority: number | null
-          tenant_id: number
-          updated_at: string | null
-        }
-        Insert: {
-          assign_to?: string | null
-          assign_to_queue?: string | null
-          conditions?: Json | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          priority?: number | null
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Update: {
-          assign_to?: string | null
-          assign_to_queue?: string | null
-          conditions?: Json | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          priority?: number | null
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      srm_catalog: {
-        Row: {
-          auto_assign_to: string | null
-          category: string
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          display_order: number | null
-          estimated_delivery_days: number | null
-          form_fields: Json | null
-          icon: string | null
-          id: number
-          is_active: boolean | null
-          name: string
-          organisation_id: string | null
-          requires_approval: boolean | null
-          tenant_id: number
-          updated_at: string | null
-        }
-        Insert: {
-          auto_assign_to?: string | null
-          category: string
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          display_order?: number | null
-          estimated_delivery_days?: number | null
-          form_fields?: Json | null
-          icon?: string | null
-          id?: number
-          is_active?: boolean | null
-          name: string
-          organisation_id?: string | null
-          requires_approval?: boolean | null
-          tenant_id: number
-          updated_at?: string | null
-        }
-        Update: {
-          auto_assign_to?: string | null
-          category?: string
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          display_order?: number | null
-          estimated_delivery_days?: number | null
-          form_fields?: Json | null
-          icon?: string | null
-          id?: number
-          is_active?: boolean | null
-          name?: string
-          organisation_id?: string | null
-          requires_approval?: boolean | null
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "srm_catalog_auto_assign_to_fkey"
-            columns: ["auto_assign_to"]
-            isOneToOne: false
-            referencedRelation: "individual_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_auto_assign_to_fkey"
-            columns: ["auto_assign_to"]
-            isOneToOne: false
-            referencedRelation: "organization_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_auto_assign_to_fkey"
-            columns: ["auto_assign_to"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "individual_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "organization_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_organisation_id_fkey"
-            columns: ["organisation_id"]
-            isOneToOne: false
-            referencedRelation: "organisations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_catalog_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      srm_request_approvals: {
-        Row: {
-          approver_id: string
-          comments: string | null
-          created_at: string | null
-          id: string
-          request_id: number
-          status: string | null
-          step_number: number
-          tenant_id: number
-          updated_at: string | null
-        }
-        Insert: {
-          approver_id: string
-          comments?: string | null
-          created_at?: string | null
-          id?: string
-          request_id: number
-          status?: string | null
-          step_number?: number
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Update: {
-          approver_id?: string
-          comments?: string | null
-          created_at?: string | null
-          id?: string
-          request_id?: number
-          status?: string | null
-          step_number?: number
-          tenant_id?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      srm_request_comments: {
+      srm_comments: {
         Row: {
           comment: string
           created_at: string | null
           id: number
           is_internal: boolean | null
           request_id: number
-          tenant_id: number
           user_id: string
         }
         Insert: {
           comment: string
           created_at?: string | null
-          id?: number
+          id?: never
           is_internal?: boolean | null
           request_id: number
-          tenant_id: number
           user_id: string
         }
         Update: {
           comment?: string
           created_at?: string | null
-          id?: number
+          id?: never
           is_internal?: boolean | null
           request_id?: number
-          tenant_id?: number
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "srm_request_comments_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "srm_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_request_comments_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_request_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "individual_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_request_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "organization_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_request_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      srm_requests: {
-        Row: {
-          additional_notes: string | null
-          approval_required: boolean | null
-          approved_at: string | null
-          approved_by: string | null
-          assignee_id: string | null
-          catalog_item_id: number | null
-          completed_at: string | null
-          created_at: string | null
-          description: string | null
-          form_data: Json | null
-          id: number
-          organisation_id: string | null
-          priority: string
-          request_number: string
-          requester_id: string
-          status: string
-          tenant_id: number
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          additional_notes?: string | null
-          approval_required?: boolean | null
-          approved_at?: string | null
-          approved_by?: string | null
-          assignee_id?: string | null
-          catalog_item_id?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          form_data?: Json | null
-          id?: number
-          organisation_id?: string | null
-          priority?: string
-          request_number: string
-          requester_id: string
-          status?: string
-          tenant_id: number
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          additional_notes?: string | null
-          approval_required?: boolean | null
-          approved_at?: string | null
-          approved_by?: string | null
-          assignee_id?: string | null
-          catalog_item_id?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          form_data?: Json | null
-          id?: number
-          organisation_id?: string | null
-          priority?: string
-          request_number?: string
-          requester_id?: string
-          status?: string
-          tenant_id?: number
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "srm_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "individual_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "organization_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "individual_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "organization_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_catalog_item_id_fkey"
-            columns: ["catalog_item_id"]
-            isOneToOne: false
-            referencedRelation: "srm_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_organisation_id_fkey"
-            columns: ["organisation_id"]
-            isOneToOne: false
-            referencedRelation: "organisations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "individual_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "organization_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "srm_requests_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       srm_sla_policies: {
         Row: {
@@ -4393,6 +5532,133 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      subscription_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_deleted: boolean | null
+          notes: string | null
+          resolved: boolean | null
+          resolved_date: string | null
+          subscription_id: string | null
+          tenant_id: number
+          trigger_date: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean | null
+          notes?: string | null
+          resolved?: boolean | null
+          resolved_date?: string | null
+          subscription_id?: string | null
+          tenant_id: number
+          trigger_date?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean | null
+          notes?: string | null
+          resolved?: boolean | null
+          resolved_date?: string | null
+          subscription_id?: string | null
+          tenant_id?: number
+          trigger_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_alerts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions_tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_deleted: boolean | null
+          name: string
+          tenant_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          name: string
+          tenant_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          name?: string
+          tenant_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_cost_history: {
+        Row: {
+          billing_period_end: string
+          billing_period_start: string
+          cost: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_number: string | null
+          is_deleted: boolean | null
+          paid_date: string | null
+          subscription_id: string
+          tenant_id: number
+        }
+        Insert: {
+          billing_period_end: string
+          billing_period_start: string
+          cost: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number?: string | null
+          is_deleted?: boolean | null
+          paid_date?: string | null
+          subscription_id: string
+          tenant_id: number
+        }
+        Update: {
+          billing_period_end?: string
+          billing_period_start?: string
+          cost?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number?: string | null
+          is_deleted?: boolean | null
+          paid_date?: string | null
+          subscription_id?: string
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_cost_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions_tools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscription_plans: {
         Row: {
@@ -4702,6 +5968,7 @@ export type Database = {
           auto_renew: boolean | null
           billing_cycle_months: number | null
           category: string | null
+          category_id: string | null
           contract_file_id: string | null
           cost: number
           created_at: string | null
@@ -4725,6 +5992,7 @@ export type Database = {
           auto_renew?: boolean | null
           billing_cycle_months?: number | null
           category?: string | null
+          category_id?: string | null
           contract_file_id?: string | null
           cost?: number
           created_at?: string | null
@@ -4748,6 +6016,7 @@ export type Database = {
           auto_renew?: boolean | null
           billing_cycle_months?: number | null
           category?: string | null
+          category_id?: string | null
           contract_file_id?: string | null
           cost?: number
           created_at?: string | null
@@ -4768,6 +6037,13 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_tools_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscriptions_tools_organisation_id_fkey"
             columns: ["organisation_id"]
@@ -4864,6 +6140,172 @@ export type Database = {
         }
         Relationships: []
       }
+      system_devices: {
+        Row: {
+          created_at: string
+          device_name: string
+          device_uuid: string
+          failed_updates_count: number | null
+          id: string
+          is_deleted: boolean | null
+          last_seen: string | null
+          last_update_install: string | null
+          last_update_scan: string | null
+          notes: string | null
+          os_build: string | null
+          os_type: string
+          os_version: string | null
+          pending_critical_count: number | null
+          pending_total_count: number | null
+          tenant_id: number
+          update_compliance_status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_name: string
+          device_uuid: string
+          failed_updates_count?: number | null
+          id?: string
+          is_deleted?: boolean | null
+          last_seen?: string | null
+          last_update_install?: string | null
+          last_update_scan?: string | null
+          notes?: string | null
+          os_build?: string | null
+          os_type: string
+          os_version?: string | null
+          pending_critical_count?: number | null
+          pending_total_count?: number | null
+          tenant_id: number
+          update_compliance_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_name?: string
+          device_uuid?: string
+          failed_updates_count?: number | null
+          id?: string
+          is_deleted?: boolean | null
+          last_seen?: string | null
+          last_update_install?: string | null
+          last_update_scan?: string | null
+          notes?: string | null
+          os_build?: string | null
+          os_type?: string
+          os_version?: string | null
+          pending_critical_count?: number | null
+          pending_total_count?: number | null
+          tenant_id?: number
+          update_compliance_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      system_installed_updates: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          install_date: string
+          install_method: string | null
+          kb_number: string
+          status: string | null
+          tenant_id: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          install_date: string
+          install_method?: string | null
+          kb_number: string
+          status?: string | null
+          tenant_id: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          install_date?: string
+          install_method?: string | null
+          kb_number?: string
+          status?: string | null
+          tenant_id?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_installed_updates_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_pending_updates: {
+        Row: {
+          classification: string | null
+          created_at: string
+          detected_at: string
+          device_id: string
+          download_size_mb: number | null
+          id: string
+          is_deleted: boolean | null
+          kb_number: string
+          release_date: string | null
+          restart_required: boolean | null
+          severity: string | null
+          tenant_id: number
+          title: string
+        }
+        Insert: {
+          classification?: string | null
+          created_at?: string
+          detected_at?: string
+          device_id: string
+          download_size_mb?: number | null
+          id?: string
+          is_deleted?: boolean | null
+          kb_number: string
+          release_date?: string | null
+          restart_required?: boolean | null
+          severity?: string | null
+          tenant_id: number
+          title: string
+        }
+        Update: {
+          classification?: string | null
+          created_at?: string
+          detected_at?: string
+          device_id?: string
+          download_size_mb?: number | null
+          id?: string
+          is_deleted?: boolean | null
+          kb_number?: string
+          release_date?: string | null
+          restart_required?: boolean | null
+          severity?: string | null
+          tenant_id?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_pending_updates_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           created_at: string | null
@@ -4887,6 +6329,129 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      system_update_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          device_id: string | null
+          id: string
+          message: string
+          resolved: boolean | null
+          resolved_at: string | null
+          severity: string
+          tenant_id: number
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          message: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity: string
+          tenant_id: number
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          message?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_update_alerts_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_update_history: {
+        Row: {
+          attempt_number: number | null
+          device_id: string
+          error_code: string | null
+          id: string
+          is_deleted: boolean | null
+          kb_number: string
+          logs: string | null
+          performed_at: string
+          status: string
+          tenant_id: number
+        }
+        Insert: {
+          attempt_number?: number | null
+          device_id: string
+          error_code?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          kb_number: string
+          logs?: string | null
+          performed_at?: string
+          status: string
+          tenant_id: number
+        }
+        Update: {
+          attempt_number?: number | null
+          device_id?: string
+          error_code?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          kb_number?: string
+          logs?: string | null
+          performed_at?: string
+          status?: string
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_update_history_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_update_ingest_logs: {
+        Row: {
+          device_id: string | null
+          id: string
+          ingested_at: string
+          payload: Json
+          tenant_id: number
+        }
+        Insert: {
+          device_id?: string | null
+          id?: string
+          ingested_at?: string
+          payload: Json
+          tenant_id: number
+        }
+        Update: {
+          device_id?: string | null
+          id?: string
+          ingested_at?: string
+          payload?: Json
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_update_ingest_logs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_updates: {
         Row: {
@@ -5225,6 +6790,427 @@ export type Database = {
         }
         Relationships: []
       }
+      units_of_production_log: {
+        Row: {
+          asset_id: number
+          created_at: string | null
+          id: string
+          profile_id: string
+          tenant_id: number
+          units_consumed: number
+          usage_period: string
+        }
+        Insert: {
+          asset_id: number
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          tenant_id: number
+          units_consumed: number
+          usage_period: string
+        }
+        Update: {
+          asset_id?: number
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          tenant_id?: number
+          units_consumed?: number
+          usage_period?: string
+        }
+        Relationships: []
+      }
+      update_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          device_id: string | null
+          id: string
+          is_read: boolean | null
+          job_id: string | null
+          message: string | null
+          organisation_id: string | null
+          read_at: string | null
+          read_by: string | null
+          severity: string | null
+          tenant_id: number
+          ticket_id: number | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          job_id?: string | null
+          message?: string | null
+          organisation_id?: string | null
+          read_at?: string | null
+          read_by?: string | null
+          severity?: string | null
+          tenant_id: number
+          ticket_id?: number | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          job_id?: string | null
+          message?: string | null
+          organisation_id?: string | null
+          read_at?: string | null
+          read_by?: string | null
+          severity?: string | null
+          tenant_id?: number
+          ticket_id?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_alerts_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "update_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_alerts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "update_rollout_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_alerts_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      update_completions: {
+        Row: {
+          completed_at: string | null
+          completed_by: string
+          completion_month: string
+          created_at: string | null
+          device_id: string
+          id: string
+          is_manual: boolean | null
+          notes: string | null
+          organisation_id: string | null
+          tenant_id: number
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by: string
+          completion_month: string
+          created_at?: string | null
+          device_id: string
+          id?: string
+          is_manual?: boolean | null
+          notes?: string | null
+          organisation_id?: string | null
+          tenant_id: number
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string
+          completion_month?: string
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          is_manual?: boolean | null
+          notes?: string | null
+          organisation_id?: string | null
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_completions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "update_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_completions_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_completions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      update_devices: {
+        Row: {
+          asset_id: number
+          asset_tag: string | null
+          created_at: string | null
+          department: string | null
+          device_name: string
+          device_type: string
+          id: string
+          is_active: boolean | null
+          last_synced_at: string | null
+          last_update_check: string | null
+          location: string | null
+          metadata: Json | null
+          organisation_id: string | null
+          os_name: string | null
+          os_version: string | null
+          owner_id: string | null
+          owner_name: string | null
+          pending_updates_count: number | null
+          tenant_id: number
+          update_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          asset_id: number
+          asset_tag?: string | null
+          created_at?: string | null
+          department?: string | null
+          device_name: string
+          device_type: string
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          last_update_check?: string | null
+          location?: string | null
+          metadata?: Json | null
+          organisation_id?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          owner_id?: string | null
+          owner_name?: string | null
+          pending_updates_count?: number | null
+          tenant_id: number
+          update_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          asset_id?: number
+          asset_tag?: string | null
+          created_at?: string | null
+          department?: string | null
+          device_name?: string
+          device_type?: string
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          last_update_check?: string | null
+          location?: string | null
+          metadata?: Json | null
+          organisation_id?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          owner_id?: string | null
+          owner_name?: string | null
+          pending_updates_count?: number | null
+          tenant_id?: number
+          update_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_devices_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_devices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      update_job_devices: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          device_id: string
+          error_message: string | null
+          id: string
+          job_id: string
+          logs: Json | null
+          progress: number | null
+          retry_count: number | null
+          started_at: string | null
+          status: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          device_id: string
+          error_message?: string | null
+          id?: string
+          job_id: string
+          logs?: Json | null
+          progress?: number | null
+          retry_count?: number | null
+          started_at?: string | null
+          status?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          device_id?: string
+          error_message?: string | null
+          id?: string
+          job_id?: string
+          logs?: Json | null
+          progress?: number | null
+          retry_count?: number | null
+          started_at?: string | null
+          status?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_job_devices_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "update_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_job_devices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "update_rollout_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_job_devices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      update_rollout_jobs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          auto_reboot: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          job_type: string | null
+          maintenance_window_end: string | null
+          maintenance_window_start: string | null
+          max_retries: number | null
+          name: string
+          organisation_id: string | null
+          requires_approval: boolean | null
+          rollback_on_failure: boolean | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string | null
+          target_filter: Json | null
+          target_type: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_reboot?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          job_type?: string | null
+          maintenance_window_end?: string | null
+          maintenance_window_start?: string | null
+          max_retries?: number | null
+          name: string
+          organisation_id?: string | null
+          requires_approval?: boolean | null
+          rollback_on_failure?: boolean | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          target_filter?: Json | null
+          target_type?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_reboot?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          job_type?: string | null
+          maintenance_window_end?: string | null
+          maintenance_window_start?: string | null
+          max_retries?: number | null
+          name?: string
+          organisation_id?: string | null
+          requires_approval?: boolean | null
+          rollback_on_failure?: boolean | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          target_filter?: Json | null
+          target_type?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_rollout_jobs_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "update_rollout_jobs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_mfa_settings: {
         Row: {
           backup_codes: string[] | null
@@ -5254,6 +7240,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_org_map: {
+        Row: {
+          created_at: string | null
+          id: string
+          organisation_id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organisation_id: string
+          role: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organisation_id?: string
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_org_map_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_permissions: {
         Row: {
@@ -5584,6 +7605,15 @@ export type Database = {
       }
     }
     Functions: {
+      auth_organisation_id: { Args: never; Returns: string }
+      bulk_soft_delete_problems: {
+        Args: { problem_ids: number[] }
+        Returns: undefined
+      }
+      bulk_soft_delete_tickets: {
+        Args: { ticket_ids: number[] }
+        Returns: undefined
+      }
       calculate_sla_due_date: {
         Args: {
           org_id?: string
@@ -5615,6 +7645,7 @@ export type Database = {
         }
         Returns: string
       }
+      generate_asset_tag: { Args: { tenant_id_param: number }; Returns: string }
       generate_change_number: {
         Args: { p_org_id: string; p_tenant_id: number }
         Returns: string
@@ -5634,6 +7665,14 @@ export type Database = {
       }
       generate_srm_request_number: {
         Args: { p_org_id: string; p_tenant_id: number }
+        Returns: string
+      }
+      generate_unified_request_number: {
+        Args: {
+          p_org_id: string
+          p_request_type: Database["public"]["Enums"]["request_type"]
+          p_tenant_id: number
+        }
         Returns: string
       }
       get_appmaster_admin_details: {
@@ -5678,6 +7717,17 @@ export type Database = {
         }[]
       }
       get_monthly_burn_rate: { Args: { org_id: string }; Returns: number }
+      get_next_asset_number: {
+        Args: { p_organisation_id: string }
+        Returns: number
+      }
+      get_next_asset_tags: {
+        Args: { p_limit?: number; p_organisation_id: string }
+        Returns: {
+          category_name: string
+          suggested_tags: string[]
+        }[]
+      }
       get_subscription_limits: {
         Args: { org_id: string }
         Returns: {
@@ -5705,6 +7755,7 @@ export type Database = {
       get_user_org: { Args: never; Returns: string }
       get_user_org_fallback: { Args: never; Returns: string }
       get_user_org_if_admin: { Args: never; Returns: string }
+      get_user_org_role: { Args: { _org_id: string }; Returns: string }
       get_user_tenant: { Args: { _user_id: string }; Returns: number }
       has_any_role: {
         Args: {
@@ -5721,6 +7772,7 @@ export type Database = {
         Args: { feature_key: string; org_id: string }
         Returns: boolean
       }
+      has_org_access: { Args: { _org_id: string }; Returns: boolean }
       has_permission: {
         Args: { permission_key: string; user_id_param: string }
         Returns: boolean
@@ -5737,10 +7789,20 @@ export type Database = {
         Returns: boolean
       }
       is_appmaster_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_org_admin_user: { Args: never; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin_user: { Args: never; Returns: boolean }
+      soft_delete_problem: {
+        Args: { problem_id_param: number }
+        Returns: undefined
+      }
       soft_delete_ticket: {
         Args: { ticket_id_param: number }
         Returns: undefined
+      }
+      user_belongs_to_org_or_tenant: {
+        Args: { _organisation_id: string; _tenant_id: number }
+        Returns: boolean
       }
       user_has_tool_access: {
         Args: { tool_key: string; user_auth_id: string }
@@ -5766,6 +7828,7 @@ export type Database = {
         | "system_alert"
         | "broadcast"
         | "general"
+      request_type: "ticket" | "service_request"
       super_admin_role:
         | "super_admin"
         | "saas_manager"
@@ -5916,6 +7979,7 @@ export const Constants = {
         "broadcast",
         "general",
       ],
+      request_type: ["ticket", "service_request"],
       super_admin_role: [
         "super_admin",
         "saas_manager",

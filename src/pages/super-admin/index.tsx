@@ -16,6 +16,7 @@ import { NotificationPanel } from "@/components/NotificationPanel";
 
 const routeTitles: Record<string, string> = {
   "/super-admin": "Dashboard",
+  "/super-admin/dashboard": "Dashboard",
   "/super-admin/users": "Individual Users",
   "/super-admin/organisations": "Organizations",
   "/super-admin/organization-users": "Organization Users",
@@ -24,6 +25,7 @@ const routeTitles: Record<string, string> = {
   "/super-admin/broadcasts": "Broadcast Messages",
   "/super-admin/contact-submissions": "Contact Submissions",
   "/super-admin/features": "Feature Flags",
+  "/super-admin/issue-reports": "Issue Reports",
   "/super-admin/jobs": "Worker Jobs Monitor",
   "/super-admin/logs": "System Logs",
   "/super-admin/plans": "Subscription Plans",

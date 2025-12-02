@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation } from "@/contexts/OrganisationContext";
 import { useQuery } from "@tanstack/react-query";
+import { AddCurrencyDialog } from "./AddCurrencyDialog";
+import { Plus } from "lucide-react";
 
 const formSchema = z.object({
   tool_name: z.string().min(1, "Tool name is required"),
@@ -40,6 +42,7 @@ export const AddToolDialog = ({ open, onOpenChange, onSuccess, editingTool }: Ad
   const { toast } = useToast();
   const { organisation } = useOrganisation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
 
   const { data: vendors } = useQuery({
     queryKey: ["subscriptions-vendors", organisation?.id],
@@ -53,6 +56,20 @@ export const AddToolDialog = ({ open, onOpenChange, onSuccess, editingTool }: Ad
       return data;
     },
     enabled: !!organisation?.id,
+  });
+
+  const { data: currencies, refetch: refetchCurrencies } = useQuery({
+    queryKey: ["currencies"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("currencies")
+        .select("*")
+        .eq("is_active", true)
+        .order("code");
+
+      if (error) throw error;
+      return data;
+    },
   });
 
 const form = useForm<z.infer<typeof formSchema>>({
@@ -290,14 +307,33 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="INR">INR (₹)</SelectItem>
+                        {currencies?.map((currency) => (
+                          <SelectItem key={currency.id} value={currency.code}>
+                            {currency.code} ({currency.symbol})
+                          </SelectItem>
+                        ))}
+                        <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground border-t mt-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start h-auto p-1 font-normal"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setAddCurrencyOpen(true);
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add New Currency
+                          </Button>
+                        </div>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -407,6 +443,12 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
           </form>
         </Form>
       </DialogContent>
+
+      <AddCurrencyDialog
+        open={addCurrencyOpen}
+        onOpenChange={setAddCurrencyOpen}
+        onSuccess={refetchCurrencies}
+      />
     </Dialog>
   );
 };

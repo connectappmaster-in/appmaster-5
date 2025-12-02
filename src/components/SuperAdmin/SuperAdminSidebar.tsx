@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Users, DollarSign, Activity, Settings, Key, Flag, Briefcase, BarChart3, FileText, LayoutDashboard, ChevronLeft, Home, User, LogOut, Shield, MessageSquare, Megaphone, Wrench } from "lucide-react";
+import { Building2, Users, DollarSign, Activity, Settings, Key, Flag, Briefcase, BarChart3, FileText, LayoutDashboard, ChevronLeft, Home, User, LogOut, Shield, MessageSquare, Megaphone, Wrench, AlertCircle } from "lucide-react";
 import appmasterLogo from "@/assets/appmaster-logo.png";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -61,6 +61,10 @@ const navItems = [{
   title: "Contact US",
   url: "/super-admin/contact-submissions",
   icon: MessageSquare
+}, {
+  title: "Issue Reports",
+  url: "/super-admin/issue-reports",
+  icon: AlertCircle
 }, {
   title: "Settings",
   url: "/super-admin/settings",

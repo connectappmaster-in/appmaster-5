@@ -33,16 +33,30 @@ export const OrganisationProvider = ({ children }: { children: React.ReactNode }
     }
 
     try {
-      // First get the user's organisation_id
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("organisation_id")
-        .eq("auth_user_id", user.id)
-        .single();
+      // First check if user is in user_org_map
+      const { data: orgMapData } = await supabase
+        .from("user_org_map")
+        .select("organisation_id, role")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      if (userError) throw userError;
+      let org_id: string | null = null;
+
+      if (orgMapData) {
+        org_id = orgMapData.organisation_id;
+      } else {
+        // Fallback to users table if not in user_org_map
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("organisation_id")
+          .eq("auth_user_id", user.id)
+          .single();
+
+        if (userError) throw userError;
+        org_id = userData?.organisation_id || null;
+      }
       
-      if (!userData?.organisation_id) {
+      if (!org_id) {
         console.log("User has no organisation_id");
         setOrganisation(null);
         setLoading(false);
@@ -53,7 +67,7 @@ export const OrganisationProvider = ({ children }: { children: React.ReactNode }
       const { data, error } = await supabase
         .from("organisations")
         .select("*")
-        .eq("id", userData.organisation_id)
+        .eq("id", org_id)
         .single();
 
       if (error) throw error;

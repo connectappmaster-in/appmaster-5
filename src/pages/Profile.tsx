@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,9 @@ import { ProfileSidebar } from "@/components/Profile/ProfileSidebar";
 import { ProfileCard } from "@/components/Profile/ProfileCard";
 import Navbar from "@/components/Navbar";
 import { Loader2, Mail, Shield, Lock, Key, Smartphone, Activity, Eye, Settings, AlertCircle, CheckCircle2 } from "lucide-react";
+import PersonalInfo from "./profile/PersonalInfo";
+import Security from "./profile/Security";
+import Payments from "./profile/Payments";
 const Profile = () => {
   const {
     user,
@@ -26,14 +29,62 @@ const Profile = () => {
     toast
   } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const isAppmasterAdmin = userType === "appmaster_admin";
   const [isEditing, setIsEditing] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: ""
   });
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Intersection Observer for tracking active section
+  useEffect(() => {
+    if (!mainRef.current) return;
+
+    const observerOptions = {
+      root: mainRef.current,
+      rootMargin: "-20% 0px -60% 0px",
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      // Find the section with the highest intersection ratio
+      const visibleSections = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      
+      if (visibleSections.length > 0) {
+        setActiveSection(visibleSections[0].target.id);
+      }
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    const sections = ["home", "personal-info", "security", "payments"];
+    sections.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Handle hash navigation on load
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+    }
+  }, [location.hash]);
   const {
     data: userData,
     isLoading,
@@ -233,88 +284,95 @@ const Profile = () => {
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>;
   }
-  return <div className="h-screen bg-background overflow-hidden">
+  return <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="flex pt-14 h-full">
-        {/* Sidebar */}
-        <ProfileSidebar />
+      <div className="flex h-screen pt-14">
+        {/* Sidebar - Fixed */}
+        <ProfileSidebar activeSection={activeSection} />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
-          {/* Header Section */}
-          <div className="text-center space-y-3">
-            <Avatar className="h-20 w-20 mx-auto border-4 border-primary/20">
-              <AvatarImage src={profile?.avatar_url || ""} />
-              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-3xl font-bold">
-                {getInitials(userData?.name)}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div>
-              <h1 className="text-2xl font-normal text-foreground">
-                Welcome, {formData.name || "User"}
-              </h1>
+      {/* Main Content with smooth scrolling */}
+      <main ref={mainRef} className="flex-1 overflow-y-auto scroll-smooth">
+        <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
+          {/* Home Section */}
+          <section id="home" className="py-4 space-y-4">
+            {/* Header Section */}
+            <div className="text-center space-y-3">
+              <Avatar className="h-20 w-20 mx-auto border-4 border-primary/20">
+                <AvatarImage src={profile?.avatar_url || ""} />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-3xl font-bold">
+                  {getInitials(userData?.name)}
+                </AvatarFallback>
+              </Avatar>
               
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              
-              
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          
-
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Profile & Personalization Card */}
-            <ProfileCard title="Profile & personalization" description="See your profile data and manage your account information" icon={<div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                  <Settings className="h-8 w-8 text-white" />
-                </div>} actionLabel="Manage your profile info" onAction={() => navigate("/profile/personal-info")} />
-
-            {/* Security Tips Card */}
-            <ProfileCard title="You have security recommendations" description="Security issues found in your Security Checkup" icon={<div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="h-8 w-8 text-white" />
-                </div>} actionLabel="Review security tips" onAction={() => navigate("/profile/security")} />
-
-            {/* Privacy Settings Card */}
-            <ProfileCard title="Privacy settings available" description="Take the Privacy Checkup and choose the settings that are right for you" icon={<div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
-                  <Eye className="h-8 w-8 text-white" />
-                </div>} actionLabel="Review privacy settings" onAction={() => navigate("/profile/privacy")} />
-
-            {/* Account Information Card */}
-            <ProfileCard title="Account information" description="View and manage your account details and preferences" icon={<div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                  <AlertCircle className="h-8 w-8 text-white" />
-                </div>}>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-muted-foreground">Email</span>
-                  <span className="font-medium">{formData.email || user?.email}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-muted-foreground">Role</span>
-                  <span className="font-medium capitalize">{userData?.role || "Member"}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-muted-foreground">Status</span>
-                  <span className="font-medium text-green-600">
-                    {userData?.status || "Active"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-muted-foreground">Member Since</span>
-                  <span className="font-medium">
-                    {userData?.created_at ? format(new Date(userData.created_at), "MMM dd, yyyy") : "-"}
-                  </span>
-                </div>
+              <div>
+                <h1 className="text-2xl font-normal text-foreground">
+                  Welcome, {formData.name || "User"}
+                </h1>
               </div>
-            </ProfileCard>
-          </div>
+            </div>
+
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Profile & Personalization Card */}
+              <ProfileCard title="Profile & personalization" description="See your profile data and manage your account information" icon={<div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                    <Settings className="h-8 w-8 text-white" />
+                  </div>} actionLabel="Manage your profile info" onAction={() => {
+                  const element = document.getElementById("personal-info");
+                  element?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }} />
+
+              {/* Security Tips Card */}
+              <ProfileCard title="You have security recommendations" description="Security issues found in your Security Checkup" icon={<div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-8 w-8 text-white" />
+                  </div>} actionLabel="Review security tips" onAction={() => {
+                  const element = document.getElementById("security");
+                  element?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }} />
+
+              {/* Account Information Card */}
+              <ProfileCard title="Account information" description="View and manage your account details and preferences" icon={<div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+                    <AlertCircle className="h-8 w-8 text-white" />
+                  </div>}>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Email</span>
+                    <span className="font-medium">{formData.email || user?.email}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Role</span>
+                    <span className="font-medium capitalize">{userData?.role || "Member"}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Status</span>
+                    <span className="font-medium text-green-600">
+                      {userData?.status || "Active"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-muted-foreground">Member Since</span>
+                    <span className="font-medium">
+                      {userData?.created_at ? format(new Date(userData.created_at), "MMM dd, yyyy") : "-"}
+                    </span>
+                  </div>
+                </div>
+              </ProfileCard>
+            </div>
+          </section>
+
+          {/* Personal Info Section */}
+          <section id="personal-info" className="py-4">
+            <PersonalInfo />
+          </section>
+
+          {/* Security Section */}
+          <section id="security" className="py-4">
+            <Security />
+          </section>
+
+          {/* Payments Section */}
+          <section id="payments" className="py-4">
+            <Payments />
+          </section>
         </div>
       </main>
       </div>

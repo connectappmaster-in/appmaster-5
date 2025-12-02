@@ -4,10 +4,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Search } from "lucide-react";
+import { Pencil, Search, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { EditToolDialog } from "./EditToolDialog";
+import { AddToolDialog } from "./AddToolDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { formatINR } from "@/lib/currencyConversion";
 interface Tool {
   id: string;
@@ -25,6 +27,9 @@ export const ToolsManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTool, setDeletingTool] = useState<Tool | null>(null);
   useEffect(() => {
     fetchTools();
   }, []);
@@ -52,9 +57,46 @@ export const ToolsManager = () => {
     setEditingTool(tool);
     setEditDialogOpen(true);
   };
+
+  const handleDelete = (tool: Tool) => {
+    setDeletingTool(tool);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingTool) return;
+
+    try {
+      const { error } = await supabase
+        .from("tools")
+        .delete()
+        .eq("id", deletingTool.id);
+
+      if (error) throw error;
+
+      toast.success("Tool deleted successfully");
+      fetchTools();
+      setDeleteDialogOpen(false);
+      setDeletingTool(null);
+    } catch (error: any) {
+      console.error("Error deleting tool:", error);
+      toast.error("Failed to delete tool");
+    }
+  };
   return <>
       <Card>
-        
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Tools Management</CardTitle>
+              <CardDescription>Manage application tools and their pricing</CardDescription>
+            </div>
+            <Button onClick={() => setAddDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Tool
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent>
           {loading ? <div className="flex items-center justify-center py-8">
               <div className="text-muted-foreground">Loading tools...</div>
@@ -96,9 +138,19 @@ export const ToolsManager = () => {
                           {formatINR(tool.yearly_price || 0)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tool)}>
-                            <Pencil className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(tool)}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDelete(tool)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>)}
                 </TableBody>
@@ -107,6 +159,16 @@ export const ToolsManager = () => {
         </CardContent>
       </Card>
 
+      <AddToolDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onSuccess={fetchTools} />
+      
       <EditToolDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} tool={editingTool} onSuccess={fetchTools} />
+      
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Tool"
+        description={`Are you sure you want to delete "${deletingTool?.name}"? This action cannot be undone.`}
+      />
     </>;
 };

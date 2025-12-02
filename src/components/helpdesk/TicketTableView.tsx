@@ -11,13 +11,17 @@ interface TicketTableViewProps {
   selectedIds: number[];
   onSelectTicket: (id: number) => void;
   onSelectAll: (checked: boolean) => void;
+  onEditTicket?: (ticket: any) => void;
+  onAssignTicket?: (ticket: any) => void;
 }
 
 export const TicketTableView = ({ 
   tickets, 
   selectedIds, 
   onSelectTicket, 
-  onSelectAll 
+  onSelectAll,
+  onEditTicket,
+  onAssignTicket
 }: TicketTableViewProps) => {
   const navigate = useNavigate();
 
@@ -43,79 +47,117 @@ export const TicketTableView = ({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden text-[0.85rem]">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
+          <TableRow className="h-9">
+            <TableHead className="w-10 py-2">
               <Checkbox
                 checked={selectedIds.length === tickets.length && tickets.length > 0}
                 onCheckedChange={onSelectAll}
               />
             </TableHead>
-            <TableHead>Ticket #</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Assignee</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="py-2">Request #</TableHead>
+            <TableHead className="py-2">Type</TableHead>
+            <TableHead className="py-2">Title</TableHead>
+            <TableHead className="py-2">Status</TableHead>
+            <TableHead className="py-2">Priority</TableHead>
+            <TableHead className="py-2">Assignee</TableHead>
+            <TableHead className="py-2">Created By</TableHead>
+            <TableHead className="py-2">Category</TableHead>
+            <TableHead className="py-2">Created</TableHead>
+            <TableHead className="text-right py-2">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {tickets.map((ticket) => (
-            <TableRow key={ticket.id} className="cursor-pointer hover:bg-muted/50">
-              <TableCell onClick={(e) => e.stopPropagation()}>
+            <TableRow key={ticket.id} className="cursor-pointer hover:bg-muted/50 h-11">
+              <TableCell onClick={(e) => e.stopPropagation()} className="py-1.5">
                 <Checkbox
                   checked={selectedIds.includes(ticket.id)}
                   onCheckedChange={() => onSelectTicket(ticket.id)}
                 />
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                <Badge variant="outline" className="font-mono">
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                <span className="font-mono text-[0.85rem]">
                   {ticket.ticket_number}
+                </span>
+              </TableCell>
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                <Badge variant="outline" className="text-[0.75rem] px-1.5 py-0.5">
+                  {ticket.request_type === 'service_request' ? 'Service Request' : 'Ticket'}
                 </Badge>
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                <div className="max-w-xs">
-                  <div className="font-medium truncate">{ticket.title}</div>
-                  <div className="text-sm text-muted-foreground truncate">
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                <div className="max-w-sm">
+                  <div className="font-medium truncate text-[0.85rem]">{ticket.title}</div>
+                  <div className="text-[0.75rem] text-muted-foreground truncate">
                     {ticket.description}
                   </div>
                 </div>
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                <Badge variant="outline" className={getStatusColor(ticket.status)}>
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                <Badge variant="outline" className={`${getStatusColor(ticket.status)} text-[0.75rem] px-1.5 py-0.5`}>
                   {ticket.status.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                <Badge className={getPriorityColor(ticket.priority)}>
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                <Badge className={`${getPriorityColor(ticket.priority)} text-[0.75rem] px-1.5 py-0.5`}>
                   {ticket.priority}
                 </Badge>
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
                 {ticket.assignee?.name || (
-                  <span className="text-muted-foreground italic">Unassigned</span>
+                  <span className="text-muted-foreground italic text-[0.8rem]">Unassigned</span>
                 )}
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                {ticket.created_by_user?.name || ticket.created_by_user?.email || (
+                  <span className="text-muted-foreground italic text-[0.8rem]">Unknown</span>
+                )}
+              </TableCell>
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
                 {ticket.category?.name || '-'}
               </TableCell>
-              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                <div className="text-sm">
+              <TableCell onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)} className="py-1.5">
+                <div className="text-[0.8rem]">
                   {format(new Date(ticket.created_at), 'MMM dd, yyyy')}
                 </div>
               </TableCell>
-              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-end gap-1">
+              <TableCell className="text-right py-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-end gap-0.5">
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-7 w-7"
                     onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}
+                    title="View"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditTicket?.(ticket);
+                    }}
+                    title="Edit"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAssignTicket?.(ticket);
+                    }}
+                    title="Assign"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </TableCell>

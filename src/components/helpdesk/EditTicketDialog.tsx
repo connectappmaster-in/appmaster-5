@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,7 +30,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Link as LinkIcon, Trash2 } from "lucide-react";
 
 const ticketSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -48,6 +50,7 @@ interface EditTicketDialogProps {
 
 export const EditTicketDialog = ({ open, onOpenChange, ticket }: EditTicketDialogProps) => {
   const queryClient = useQueryClient();
+  const [selectedProblemId, setSelectedProblemId] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ["helpdesk-categories"],
@@ -59,6 +62,35 @@ export const EditTicketDialog = ({ open, onOpenChange, ticket }: EditTicketDialo
         .order("name");
       return data || [];
     },
+  });
+
+  const { data: linkedProblems } = useQuery({
+    queryKey: ["helpdesk-problem-tickets", ticket?.id],
+    queryFn: async () => {
+      if (!ticket?.id) return [];
+      const { data } = await supabase
+        .from("helpdesk_problem_tickets")
+        .select("*, problem:helpdesk_problems(id, problem_number, title, status)")
+        .eq("ticket_id", ticket.id);
+      return data || [];
+    },
+    enabled: !!ticket?.id && open,
+  });
+
+  const { data: availableProblems = [] } = useQuery({
+    queryKey: ["helpdesk-problems-for-link", ticket?.organisation_id],
+    queryFn: async () => {
+      if (!ticket?.organisation_id) return [];
+      const { data, error } = await supabase
+        .from("helpdesk_problems")
+        .select("id, problem_number, title, status")
+        .eq("organisation_id", ticket.organisation_id)
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!ticket?.organisation_id && open,
   });
 
   const form = useForm<z.infer<typeof ticketSchema>>({
@@ -110,6 +142,7 @@ export const EditTicketDialog = ({ open, onOpenChange, ticket }: EditTicketDialo
     },
     onSuccess: () => {
       toast.success("Ticket updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["unified-requests"] });
       queryClient.invalidateQueries({ queryKey: ["helpdesk-tickets"] });
       queryClient.invalidateQueries({ queryKey: ["helpdesk-ticket", ticket.id.toString()] });
       queryClient.invalidateQueries({ queryKey: ["helpdesk-dashboard-stats"] });
@@ -117,6 +150,43 @@ export const EditTicketDialog = ({ open, onOpenChange, ticket }: EditTicketDialo
     },
     onError: (error: Error) => {
       toast.error("Failed to update ticket: " + error.message);
+    },
+  });
+
+  const linkProblem = useMutation({
+    mutationFn: async (problemId: string) => {
+      const { error } = await supabase
+        .from("helpdesk_problem_tickets")
+        .insert({
+          ticket_id: ticket.id,
+          problem_id: parseInt(problemId),
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Problem linked to ticket");
+      setSelectedProblemId("");
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-problem-tickets", ticket.id] });
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to link problem: " + error.message);
+    },
+  });
+
+  const unlinkProblem = useMutation({
+    mutationFn: async (linkId: number) => {
+      const { error } = await supabase
+        .from("helpdesk_problem_tickets")
+        .delete()
+        .eq("id", linkId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Problem unlinked");
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-problem-tickets", ticket.id] });
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to unlink problem: " + error.message);
     },
   });
 
@@ -243,6 +313,70 @@ export const EditTicketDialog = ({ open, onOpenChange, ticket }: EditTicketDialo
                 </FormItem>
               )}
             />
+
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <LinkIcon className="h-4 w-4" />
+                <h4 className="text-sm font-medium">Linked Problems ({linkedProblems?.length || 0})</h4>
+              </div>
+
+              {linkedProblems && linkedProblems.length > 0 && (
+                <div className="space-y-2">
+                  {linkedProblems.map((link: any) => (
+                    <div
+                      key={link.id}
+                      className="flex items-center justify-between p-2 border rounded-lg text-sm"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Badge variant="outline" className="font-mono text-xs shrink-0">
+                          {link.problem?.problem_number}
+                        </Badge>
+                        <span className="truncate">{link.problem?.title}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => unlinkProblem.mutate(link.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Select value={selectedProblemId} onValueChange={setSelectedProblemId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a problem to link" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProblems
+                      .filter(
+                        (problem) =>
+                          !linkedProblems?.some((link: any) => link.problem_id === problem.id)
+                      )
+                      .map((problem) => (
+                        <SelectItem key={problem.id} value={problem.id.toString()}>
+                          {problem.problem_number} - {problem.title}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => selectedProblemId && linkProblem.mutate(selectedProblemId)}
+                  disabled={!selectedProblemId || linkProblem.isPending}
+                >
+                  {linkProblem.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+                  Link
+                </Button>
+              </div>
+            </div>
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

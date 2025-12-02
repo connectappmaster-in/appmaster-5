@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Trash2, UserPlus, Edit3 } from "lucide-react";
+import { X, Trash2, UserPlus, Edit3, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu";
 
 interface BulkActionsToolbarProps {
   selectedIds: number[];
@@ -48,6 +58,7 @@ export const BulkActionsToolbar = ({ selectedIds, onClearSelection }: BulkAction
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['unified-requests'] });
       queryClient.invalidateQueries({ queryKey: ['helpdesk-tickets'] });
       queryClient.invalidateQueries({ queryKey: ['helpdesk-stats'] });
       toast.success(`Successfully updated ${selectedIds.length} ticket(s)`);
@@ -70,6 +81,7 @@ export const BulkActionsToolbar = ({ selectedIds, onClearSelection }: BulkAction
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unified-requests'] });
       queryClient.invalidateQueries({ queryKey: ['helpdesk-tickets'] });
       queryClient.invalidateQueries({ queryKey: ['helpdesk-stats'] });
       toast.success(`Successfully deleted ${selectedIds.length} ticket(s)`);
@@ -91,54 +103,91 @@ export const BulkActionsToolbar = ({ selectedIds, onClearSelection }: BulkAction
         </Badge>
 
         <div className="flex items-center gap-2 flex-1">
-          <Select onValueChange={(value) => bulkUpdateMutation.mutate({ field: 'status', value })}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Change Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="on_hold">On Hold</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Actions
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Change Status
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'status', value: 'open' })}>
+                    Open
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'status', value: 'in_progress' })}>
+                    In Progress
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'status', value: 'on_hold' })}>
+                    On Hold
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'status', value: 'resolved' })}>
+                    Resolved
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'status', value: 'closed' })}>
+                    Closed
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
-          <Select onValueChange={(value) => bulkUpdateMutation.mutate({ field: 'priority', value })}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Change Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Change Priority
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'priority', value: 'urgent' })}>
+                    Urgent
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'priority', value: 'high' })}>
+                    High
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'priority', value: 'medium' })}>
+                    Medium
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'priority', value: 'low' })}>
+                    Low
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
-          <Select onValueChange={(value) => bulkUpdateMutation.mutate({ field: 'assigned_to', value: value === 'unassign' ? null : value })}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Assign To" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="unassign">Unassign</SelectItem>
-              {users?.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.name || user.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Assign To
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => bulkUpdateMutation.mutate({ field: 'assigned_to', value: null })}>
+                    Unassign
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {users?.map((user) => (
+                    <DropdownMenuItem 
+                      key={user.id} 
+                      onClick={() => bulkUpdateMutation.mutate({ field: 'assigned_to', value: user.id })}
+                    >
+                      {user.name || user.email}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowDeleteDialog(true)}
-            disabled={bulkDeleteMutation.isPending}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <Button

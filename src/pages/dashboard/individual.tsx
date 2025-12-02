@@ -5,7 +5,7 @@ import { ToolCard } from "@/components/Dashboard/ToolCard";
 import { AddToolsDialog } from "@/components/Dashboard/AddToolsDialog";
 import { Button } from "@/components/ui/button";
 import { 
-  Users, Ticket, TrendingUp, 
+  Users, Ticket, 
   Calendar, FileText, Briefcase, Plus, Sparkles, Package
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -71,12 +71,10 @@ const IndividualDashboard = () => {
 
   // Map tools to include icon data
   const TOOL_ICONS: Record<string, any> = {
-    assets: { icon: Briefcase, color: "text-indigo-500" },
     attendance: { icon: Calendar, color: "text-purple-500" },
     crm: { icon: Users, color: "text-blue-500" },
     invoicing: { icon: FileText, color: "text-yellow-500" },
     it_help_desk: { icon: Ticket, color: "text-orange-500" },
-    subscriptions: { icon: TrendingUp, color: "text-pink-500" },
   };
 
   const allTools = allToolsData.map(tool => ({

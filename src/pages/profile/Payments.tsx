@@ -108,17 +108,11 @@ const Payments = () => {
 
   // Check if user has permission to view payments
   const hasAccess = accountType === 'personal' || isAdmin();
-  return <div className="h-screen bg-background overflow-hidden">
-      <Navbar />
-      <div className="flex pt-14 h-full overflow-hidden">
-        <ProfileSidebar />
-      
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-4 py-3 space-y-3">
+  return <div className="py-4 space-y-3">
           {/* Header */}
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Payments & Billing</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h1 className="text-2xl font-normal">Payments & Billing</h1>
+            <p className="text-muted-foreground mt-1">
               Manage your subscription, payment methods, and billing history
             </p>
           </div>
@@ -288,15 +282,12 @@ const Payments = () => {
             </CardContent>
           </Card>
           </>}
-        </div>
-      </main>
 
       {/* Dialogs - only available if user has access */}
       {hasAccess && <>
           <AddPaymentMethodDialog open={isAddPaymentDialogOpen} onOpenChange={setIsAddPaymentDialogOpen} />
           <ChangePlanDialog open={isChangePlanDialogOpen} onOpenChange={setIsChangePlanDialogOpen} currentPlanId={subscription?.plan_id || undefined} />
         </>}
-      </div>
     </div>;
 };
 export default Payments;

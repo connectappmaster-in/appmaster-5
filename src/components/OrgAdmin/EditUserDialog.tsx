@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -37,8 +38,19 @@ interface EditUserDialogProps {
 export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUserDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState(user?.role || "staff");
-  const [status, setStatus] = useState(user?.status || "active");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("staff");
+  const [status, setStatus] = useState("active");
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+      setRole(user.role || "staff");
+      setStatus(user.status || "active");
+    }
+  }, [user]);
 
   const handleUpdate = async () => {
     if (!user) return;
@@ -47,7 +59,12 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
     try {
       const { error } = await supabase
         .from("users")
-        .update({ role, status })
+        .update({ 
+          name: name.trim(),
+          email: email.trim(),
+          role, 
+          status 
+        })
         .eq("id", user.id);
 
       if (error) throw error;
@@ -77,10 +94,29 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user role and status for {user?.name}
+            Update user details for {user?.email}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-name">Display Name</Label>
+            <Input 
+              id="edit-name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter display name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-email">Email</Label>
+            <Input 
+              id="edit-email" 
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email address"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="edit-role">Role</Label>
             <Select value={role} onValueChange={setRole}>
@@ -88,6 +124,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="owner">Owner</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="staff">Staff</SelectItem>
@@ -113,7 +150,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleUpdate} disabled={loading}>
+          <Button onClick={handleUpdate} disabled={loading || !name.trim() || !email.trim()}>
             {loading ? "Updating..." : "Update User"}
           </Button>
         </DialogFooter>

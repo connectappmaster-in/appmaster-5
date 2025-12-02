@@ -4,10 +4,8 @@ import {
   FileText, 
   Clock, 
   Ticket, 
-  Package,
   BarChart3,
-  Mail,
-  PackageSearch
+  Mail
 } from "lucide-react";
 
 const modules = [
@@ -29,9 +27,7 @@ const modules = [
     category: "IT", 
     color: "from-cyan-500 to-blue-500",
     items: [
-      { name: "HelpDesk", icon: Ticket, path: "/helpdesk" },
-      { name: "Subscriptions", icon: PackageSearch, path: "/subscriptions" },
-      { name: "Assets", icon: Package, path: "/assets" }
+      { name: "HelpDesk", icon: Ticket, path: "/helpdesk" }
     ]
   },
   { 

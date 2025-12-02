@@ -1,55 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Ticket, AlertTriangle, LayoutGrid, Table as TableIcon, Archive, Link as LinkIcon, BookOpen, Clock, Settings, BarChart3 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Plus, Ticket, AlertTriangle, Search, AlertCircle, Clock, CheckCircle2, Package } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnifiedRequests, useUnifiedRequestsStats, type RequestType } from "@/hooks/useUnifiedRequests";
 import { CreateProblemDialog } from "@/components/helpdesk/CreateProblemDialog";
-import { TicketStatsCards } from "@/components/helpdesk/TicketStatsCards";
+import { CreateTicketDialog } from "@/components/helpdesk/CreateTicketDialog";
 import { TicketFilters } from "@/components/helpdesk/TicketFilters";
-import { BulkActionsToolbar } from "@/components/helpdesk/BulkActionsToolbar";
+import { BulkActionsButton } from "@/components/helpdesk/BulkActionsButton";
+import { BulkActionsProblemButton } from "@/components/helpdesk/BulkActionsProblemButton";
 import { TicketTableView } from "@/components/helpdesk/TicketTableView";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EditTicketDialog } from "@/components/helpdesk/EditTicketDialog";
+import { AssignTicketDialog } from "@/components/helpdesk/AssignTicketDialog";
+import { EditProblemDialog } from "@/components/helpdesk/EditProblemDialog";
+import { AssignProblemDialog } from "@/components/helpdesk/AssignProblemDialog";
+import { ProblemTableView } from "@/components/helpdesk/ProblemTableView";
+import { useHelpdeskStats } from "@/hooks/useHelpdeskStats";
 export default function TicketsModule() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("tickets");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [requestTypeFilter, setRequestTypeFilter] = useState<RequestType>('all');
+
+  // Set active tab based on route
+  useEffect(() => {
+    if (location.pathname === "/helpdesk/problems") {
+      setActiveTab("problems");
+    }
+  }, [location.pathname]);
   const [createProblemOpen, setCreateProblemOpen] = useState(false);
-  const [view, setView] = useState<'list' | 'table'>('list');
+  const [createTicketOpen, setCreateTicketOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [editTicket, setEditTicket] = useState<any>(null);
+  const [assignTicket, setAssignTicket] = useState<any>(null);
+  const [editProblem, setEditProblem] = useState<any>(null);
+  const [assignProblem, setAssignProblem] = useState<any>(null);
+  const [selectedProblemIds, setSelectedProblemIds] = useState<number[]>([]);
+  const [problemFilters, setProblemFilters] = useState<Record<string, any>>({});
   const {
-    data: allTickets,
+    data: allRequests,
     isLoading
-  } = useQuery({
-    queryKey: ['helpdesk-tickets-all'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('helpdesk_tickets').select('*, category:helpdesk_categories(name), assignee:helpdesk_tickets_assignee_id_fkey(full_name)').order('created_at', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data || [];
-    }
-  });
+  } = useUnifiedRequests(requestTypeFilter);
 
   // Client-side filtering
-  const tickets = (allTickets || []).filter((ticket: any) => {
-    if (filters.status && ticket.status !== filters.status) return false;
-    if (filters.priority && ticket.priority !== filters.priority) return false;
-    if (filters.category && ticket.category_id?.toString() !== filters.category) return false;
-    if (filters.assignee === 'unassigned' && ticket.assignee_id) return false;
-    if (filters.assignee && filters.assignee !== 'unassigned' && ticket.assignee_id !== filters.assignee) return false;
+  const requests = (allRequests || []).filter((request: any) => {
+    if (filters.requestType && request.request_type !== filters.requestType) return false;
+    if (filters.status && request.status !== filters.status) return false;
+    if (filters.priority && request.priority !== filters.priority) return false;
+    if (filters.category && request.category_id?.toString() !== filters.category) return false;
+    if (filters.assignee === 'unassigned' && request.assignee_id) return false;
+    if (filters.assignee && filters.assignee !== 'unassigned' && request.assignee_id !== filters.assignee) return false;
     if (filters.search) {
       const search = filters.search.toLowerCase();
-      const matchesSearch = ticket.title?.toLowerCase().includes(search) || ticket.description?.toLowerCase().includes(search) || ticket.ticket_number?.toLowerCase().includes(search);
+      const matchesSearch = request.title?.toLowerCase().includes(search) || request.description?.toLowerCase().includes(search) || request.ticket_number?.toLowerCase().includes(search);
       if (!matchesSearch) return false;
     }
-    if (filters.dateFrom && new Date(ticket.created_at) < new Date(filters.dateFrom)) return false;
-    if (filters.dateTo && new Date(ticket.created_at) > new Date(filters.dateTo)) return false;
+    if (filters.dateFrom && new Date(request.created_at) < new Date(filters.dateFrom)) return false;
+    if (filters.dateTo && new Date(request.created_at) > new Date(filters.dateTo)) return false;
     return true;
   });
   const {
@@ -60,167 +74,521 @@ export default function TicketsModule() {
       const {
         data,
         error
-      } = await supabase.from('helpdesk_problems').select('*').order('created_at', {
+      } = await supabase.from('helpdesk_problems').select(`
+          *,
+          category:helpdesk_categories(name)
+        `).eq('is_deleted', false).order('created_at', {
         ascending: false
       });
       if (error) throw error;
+
+      // Fetch created_by and assigned_to users separately using auth_user_id
+      if (data && data.length > 0) {
+        const userAuthIds = [...new Set(
+          data
+            .flatMap((p: any) => [p.created_by, p.assigned_to])
+            .filter(Boolean)
+        )];
+
+        if (userAuthIds.length > 0) {
+          const { data: users } = await supabase
+            .from('users')
+            .select('id, auth_user_id, name, email')
+            .in('auth_user_id', userAuthIds as string[]);
+
+          if (users) {
+            const userMap: Record<string, any> = Object.fromEntries(
+              users.map((u: any) => [u.auth_user_id, u])
+            );
+
+            return data.map((problem: any) => ({
+              ...problem,
+              created_by_user: problem.created_by
+                ? userMap[problem.created_by] || null
+                : null,
+              assigned_to_user: problem.assigned_to
+                ? userMap[problem.assigned_to] || null
+                : null
+            }));
+          }
+        }
+      }
+
       return data || [];
     }
   });
-  const problems = allProblems || [];
+
+  // Client-side filtering for problems
+  const problems = (allProblems || []).filter((problem: any) => {
+    if (problemFilters.status && problem.status !== problemFilters.status) return false;
+    if (problemFilters.priority && problem.priority !== problemFilters.priority) return false;
+    if (problemFilters.search) {
+      const search = problemFilters.search.toLowerCase();
+      const matchesSearch = problem.title?.toLowerCase().includes(search) || problem.description?.toLowerCase().includes(search) || problem.problem_number?.toLowerCase().includes(search);
+      if (!matchesSearch) return false;
+    }
+    return true;
+  });
   const handleSelectTicket = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
   const handleSelectAll = (checked: boolean) => {
-    setSelectedIds(checked ? tickets.map((t: any) => t.id) : []);
+    setSelectedIds(checked ? requests.map((t: any) => t.id) : []);
   };
-  const quickLinks = [{
-    icon: Archive,
-    label: "Closed Archive",
-    path: "/helpdesk/tickets/closed-archive"
-  }, {
-    icon: LinkIcon,
-    label: "Linked Problems",
-    path: "/helpdesk/tickets/linked-problems"
-  }, {
-    icon: BookOpen,
-    label: "Knowledge Base",
-    path: "/helpdesk/kb"
-  }, {
-    icon: Clock,
-    label: "SLA Policies",
-    path: "/helpdesk/sla"
-  }, {
-    icon: Settings,
-    label: "Assignment Rules",
-    path: "/helpdesk/tickets/assignment-rules"
-  }];
+  const handleSelectProblem = (id: number) => {
+    setSelectedProblemIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+  const handleSelectAllProblems = (checked: boolean) => {
+    setSelectedProblemIds(checked ? problems.map((p: any) => p.id) : []);
+  };
+  const {
+    data: stats,
+    isLoading: statsLoading
+  } = useUnifiedRequestsStats();
+  const quickLinks: any[] = [];
   return <div className="min-h-screen bg-background">
-      <div className="w-full px-4 py-3">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-end mb-3 gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/helpdesk/tickets/reports')} className="gap-1.5 h-8">
-              <BarChart3 className="h-3.5 w-3.5" />
-              <span className="text-sm">Reports</span>
-            </Button>
-            <Button size="sm" onClick={() => navigate('/helpdesk/new')} className="gap-1.5 h-8">
-              <Plus className="h-3.5 w-3.5" />
-              <span className="text-sm">New Ticket</span>
-            </Button>
-          </div>
-
-          {/* Quick Links */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {quickLinks.map(link => {
-            const Icon = link.icon;
-            return <Button key={link.path} variant="outline" size="sm" onClick={() => navigate(link.path)} className="gap-1.5 h-7 px-2.5 text-xs">
-                  <Icon className="h-3 w-3" />
-                  <span>{link.label}</span>
-                </Button>;
-          })}
-          </div>
-
-          {/* Stats Cards */}
-          <TicketStatsCards />
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
-          {/* Tabs Header with Actions */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2">
-            <TabsList className="h-9">
-              <TabsTrigger value="tickets" className="gap-1.5 px-4 text-sm">
-                <Ticket className="h-3.5 w-3.5" />
-                All Tickets
-                {tickets.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs px-1.5 py-0">
-                    {tickets.length}
-                  </Badge>}
+      <div className="w-full px-4 pt-2 pb-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
+          {/* Compact Single Row Header */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <TabsList className="h-8">
+              <TabsTrigger value="overview" className="gap-1.5 px-3 text-sm h-7">
+                Overview
               </TabsTrigger>
-              <TabsTrigger value="problems" className="gap-1.5 px-4 text-sm">
-                <AlertTriangle className="h-3.5 w-3.5" />
+              <TabsTrigger value="tickets" className="gap-1.5 px-3 text-sm h-7" onClick={() => setRequestTypeFilter('all')}>
+                Tickets
+              </TabsTrigger>
+              <TabsTrigger value="problems" className="gap-1.5 px-3 text-sm h-7">
                 Problems
-                {problems.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs px-1.5 py-0">
-                    {problems.length}
-                  </Badge>}
               </TabsTrigger>
             </TabsList>
-            
-            <div className="flex items-center gap-2">
-              {activeTab === 'tickets' && <div className="flex gap-1.5">
-                  <Button variant={view === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setView('list')} className="gap-1.5 h-8 px-3">
-                    <LayoutGrid className="h-3.5 w-3.5" />
-                    <span className="text-sm">List</span>
+
+            {activeTab === 'tickets' && <>
+                <div className="relative w-[250px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search tickets and requests..." value={filters.search || ''} onChange={e => setFilters({
+                ...filters,
+                search: e.target.value
+              })} className="pl-9 h-8" />
+                </div>
+
+                <div className="flex items-center gap-2 ml-auto">
+                  <BulkActionsButton selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} />
+                  
+                  <Select value={filters.requestType || 'all'} onValueChange={value => setFilters({
+                ...filters,
+                requestType: value === 'all' ? null : value
+              })}>
+                    <SelectTrigger className="w-[140px] h-8">
+                      <SelectValue placeholder="Request Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="ticket">Tickets</SelectItem>
+                      <SelectItem value="service_request">Service Requests</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filters.status || 'all'} onValueChange={value => setFilters({
+                ...filters,
+                status: value === 'all' ? null : value
+              })}>
+                    <SelectTrigger className="w-[120px] h-8">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="on_hold">On Hold</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filters.priority || 'all'} onValueChange={value => setFilters({
+                ...filters,
+                priority: value === 'all' ? null : value
+              })}>
+                    <SelectTrigger className="w-[120px] h-8">
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Priority</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button size="sm" onClick={() => setCreateTicketOpen(true)} className="gap-1.5 h-8">
+                    <Plus className="h-3.5 w-3.5" />
+                    <span className="text-sm">New Request</span>
                   </Button>
-                  <Button variant={view === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setView('table')} className="gap-1.5 h-8 px-3">
-                    <TableIcon className="h-3.5 w-3.5" />
-                    <span className="text-sm">Table</span>
+                </div>
+              </>}
+
+            {activeTab === 'problems' && <>
+                <div className="relative w-[250px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search problems..." value={problemFilters.search || ''} onChange={e => setProblemFilters({
+                ...problemFilters,
+                search: e.target.value
+              })} className="pl-9 h-8" />
+                </div>
+
+                <div className="flex items-center gap-2 ml-auto">
+                  <BulkActionsProblemButton selectedIds={selectedProblemIds} onClearSelection={() => setSelectedProblemIds([])} />
+                  
+                  <Select value={problemFilters.status || 'all'} onValueChange={value => setProblemFilters({
+                ...problemFilters,
+                status: value === 'all' ? null : value
+              })}>
+                    <SelectTrigger className="w-[120px] h-8">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="known_error">Known Error</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={problemFilters.priority || 'all'} onValueChange={value => setProblemFilters({
+                ...problemFilters,
+                priority: value === 'all' ? null : value
+              })}>
+                    <SelectTrigger className="w-[120px] h-8">
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Priority</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button size="sm" onClick={() => setCreateProblemOpen(true)} className="gap-1.5 h-8">
+                    <Plus className="h-3.5 w-3.5" />
+                    <span className="text-sm">New Problem</span>
                   </Button>
-                </div>}
-              <Button variant="outline" size="sm" onClick={() => setCreateProblemOpen(true)} className="gap-1.5 h-8">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="text-sm">New Problem</span>
-              </Button>
-            </div>
+                </div>
+              </>}
           </div>
 
-          <TabsContent value="tickets" className="space-y-2">
-            {/* Filters */}
-            <TicketFilters onFilterChange={setFilters} activeFilters={filters} />
+          <TabsContent value="overview" className="space-y-4 mt-2">
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-3">
+              <Button onClick={() => setCreateTicketOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Ticket
+              </Button>
+              <Button onClick={() => setCreateProblemOpen(true)} variant="outline" className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Problem
+              </Button>
+            </div>
 
-            {/* Bulk Actions */}
-            {selectedIds.length > 0 && <BulkActionsToolbar selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} />}
+            {statsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                {/* Tickets Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tickets Overview</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'ticket' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Ticket className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.tickets?.total || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Total Tickets</p>
+                      </CardContent>
+                    </Card>
 
-            {/* Tickets Content */}
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'ticket', status: 'open' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <AlertCircle className="h-4 w-4 text-orange-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.tickets?.open || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Open</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'ticket', status: 'in_progress' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.tickets?.inProgress || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">In Progress</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'ticket', status: 'resolved' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.tickets?.resolved || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Resolved</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'ticket', priority: 'urgent' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.tickets?.urgent || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Urgent</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'ticket' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Ticket className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.recentTickets || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Last 7 Days</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Service Requests Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Service Requests</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'service_request' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Package className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.serviceRequests?.total || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Total Requests</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'service_request', status: 'open' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.serviceRequests?.pending || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Pending</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'service_request', status: 'in_progress' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Clock className="h-4 w-4 text-orange-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.serviceRequests?.inProgress || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">In Progress</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("tickets");
+                        setFilters({ requestType: 'service_request', status: 'fulfilled' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        </div>
+                        <p className="text-2xl font-bold">{stats?.serviceRequests?.fulfilled || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Fulfilled</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Problems Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Problems</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("problems");
+                        setProblemFilters({});
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <AlertTriangle className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="text-2xl font-bold">{problems?.length || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Total Problems</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("problems");
+                        setProblemFilters({ status: 'open' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <AlertCircle className="h-4 w-4 text-orange-500" />
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {problems?.filter((p: any) => p.status === 'open').length || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Open</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("problems");
+                        setProblemFilters({ status: 'in_progress' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {problems?.filter((p: any) => p.status === 'in_progress').length || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">In Progress</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("problems");
+                        setProblemFilters({ status: 'resolved' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {problems?.filter((p: any) => p.status === 'resolved').length || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Resolved</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card 
+                      className="cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all" 
+                      onClick={() => {
+                        setActiveTab("problems");
+                        setProblemFilters({ priority: 'urgent' });
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {problems?.filter((p: any) => p.priority === 'urgent').length || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Urgent</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="tickets" className="space-y-2 mt-2">
             {isLoading ? <div className="flex items-center justify-center py-12">
                 <div className="text-center space-y-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="text-sm text-muted-foreground">Loading tickets...</p>
+                  <p className="text-sm text-muted-foreground">Loading...</p>
                 </div>
-              </div> : tickets.length === 0 ? <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg">
+              </div> : requests.length === 0 ? <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg">
                 <div className="rounded-full bg-muted p-4 mb-3">
                   <Ticket className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-base font-semibold mb-1">No tickets found</h3>
+                <h3 className="text-base font-semibold mb-1">No requests found</h3>
                 <p className="text-xs text-muted-foreground mb-4 text-center max-w-md">
-                  {Object.keys(filters).length > 0 ? "Try adjusting your filters to see more tickets" : "Get started by creating your first support ticket"}
+                  {Object.keys(filters).length > 0 ? "Try adjusting your filters to see more requests" : "Get started by creating your first ticket or service request"}
                 </p>
-                {Object.keys(filters).length === 0 && <Button onClick={() => navigate('/helpdesk/new')} size="sm" className="gap-1.5 h-8">
+                {Object.keys(filters).length === 0 && <Button onClick={() => setCreateTicketOpen(true)} size="sm" className="gap-1.5 h-8">
                     <Plus className="h-3.5 w-3.5" />
-                    <span className="text-sm">Create First Ticket</span>
+                    <span className="text-sm">Create First Request</span>
                   </Button>}
-              </div> : view === 'table' ? <TicketTableView tickets={tickets} selectedIds={selectedIds} onSelectTicket={handleSelectTicket} onSelectAll={handleSelectAll} /> : <div className="space-y-1.5">
-                {tickets.map((ticket: any) => <div key={ticket.id} className={`hover:bg-accent/50 transition-colors cursor-pointer p-3 rounded-md border ${selectedIds.includes(ticket.id) ? 'ring-2 ring-primary' : ''} ${ticket.sla_breached ? 'border-l-4 border-l-destructive' : ''}`} onClick={() => navigate(`/helpdesk/tickets/${ticket.id}`)}>
-                    <div className="flex items-start gap-2">
-                      <input type="checkbox" checked={selectedIds.includes(ticket.id)} onChange={() => handleSelectTicket(ticket.id)} onClick={e => e.stopPropagation()} className="mt-0.5 h-3.5 w-3.5 rounded border-input" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-                          <Badge variant="outline" className="font-mono text-[10px] h-5 px-1.5">
-                            {ticket.ticket_number}
-                          </Badge>
-                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                            {ticket.status.replace('_', ' ')}
-                          </Badge>
-                          <Badge className={`text-[10px] h-5 px-1.5 ${ticket.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : ticket.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : ticket.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
-                            {ticket.priority}
-                          </Badge>
-                          {ticket.category && <Badge variant="outline" className="text-[10px] h-5 px-1.5">{ticket.category.name}</Badge>}
-                          {ticket.sla_breached && <Badge variant="destructive" className="gap-1 text-[10px] h-5 px-1.5">
-                              <Clock className="h-2.5 w-2.5" />
-                              SLA Breached
-                            </Badge>}
-                        </div>
-                        <h3 className="text-sm font-medium mb-0.5">{ticket.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-                          {ticket.description}
-                        </p>
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                          <span>Created {new Date(ticket.created_at).toLocaleDateString()}</span>
-                          {ticket.assignee && <span>• Assigned to {ticket.assignee.full_name}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>)}
-              </div>}
+              </div> : <TicketTableView tickets={requests} selectedIds={selectedIds} onSelectTicket={handleSelectTicket} onSelectAll={handleSelectAll} onEditTicket={setEditTicket} onAssignTicket={setAssignTicket} />}
           </TabsContent>
 
           <TabsContent value="problems" className="space-y-2">
@@ -236,33 +604,16 @@ export default function TicketsModule() {
                   <Plus className="h-3.5 w-3.5" />
                   <span className="text-sm">Create First Problem</span>
                 </Button>
-              </div> : <div className="space-y-1.5">
-                {problems.map((problem: any) => <div key={problem.id} className="hover:bg-accent/50 transition-colors cursor-pointer p-3 rounded-md border" onClick={() => navigate(`/helpdesk/problems/${problem.id}`)}>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Badge variant="outline" className="font-mono text-[10px] h-5 px-1.5">
-                        {problem.problem_number}
-                      </Badge>
-                      <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                        {problem.status}
-                      </Badge>
-                      <Badge className={`text-[10px] h-5 px-1.5 ${problem.priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : problem.priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : problem.priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
-                        {problem.priority}
-                      </Badge>
-                    </div>
-                    <h3 className="text-sm font-medium mb-0.5">{problem.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-                      {problem.description}
-                    </p>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                      <span>Created {new Date(problem.created_at).toLocaleDateString()}</span>
-                      {problem.linked_ticket_ids && problem.linked_ticket_ids.length > 0 && <span>• {problem.linked_ticket_ids.length} linked tickets</span>}
-                    </div>
-                  </div>)}
-              </div>}
+              </div> : <ProblemTableView problems={problems} selectedIds={selectedProblemIds} onSelectProblem={handleSelectProblem} onSelectAll={handleSelectAllProblems} onEditProblem={setEditProblem} onAssignProblem={setAssignProblem} />}
           </TabsContent>
         </Tabs>
 
+        <CreateTicketDialog open={createTicketOpen} onOpenChange={setCreateTicketOpen} />
         <CreateProblemDialog open={createProblemOpen} onOpenChange={setCreateProblemOpen} />
+        {editTicket && <EditTicketDialog open={!!editTicket} onOpenChange={open => !open && setEditTicket(null)} ticket={editTicket} />}
+        {assignTicket && <AssignTicketDialog open={!!assignTicket} onOpenChange={open => !open && setAssignTicket(null)} ticket={assignTicket} />}
+        {editProblem && <EditProblemDialog open={!!editProblem} onOpenChange={open => !open && setEditProblem(null)} problem={editProblem} />}
+        {assignProblem && <AssignProblemDialog open={!!assignProblem} onOpenChange={open => !open && setAssignProblem(null)} problem={assignProblem} />}
       </div>
     </div>;
 }

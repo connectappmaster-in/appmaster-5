@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Package, UserCheck } from "lucide-react";
+import { Loader2, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -91,76 +90,78 @@ export const AssetAssignmentsList = () => {
 
   if (assignments.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="text-center text-muted-foreground">
-            <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No active assignments</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg">
+        <div className="rounded-full bg-muted p-4 mb-3">
+          <UserCheck className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-base font-semibold mb-1">No active assignments</h3>
+        <p className="text-xs text-muted-foreground text-center max-w-md">
+          Assets will appear here once they are assigned to users
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Asset</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Assigned Date</TableHead>
-              <TableHead>Condition</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {assignments.map((assignment: any) => (
-              <TableRow key={assignment.id}>
-                <TableCell className="font-medium">
-                  {assignment.assets?.name || "Unknown"}
-                </TableCell>
-                <TableCell>
-                  {assignment.assets?.asset_type && (
-                    <Badge variant="outline">{assignment.assets.asset_type}</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{assignment.users?.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {assignment.users?.email}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {format(new Date(assignment.assigned_at), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="capitalize">
-                    {assignment.condition_at_assignment || "N/A"}
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="text-xs font-medium h-9">ASSET</TableHead>
+            <TableHead className="text-xs font-medium h-9">TYPE</TableHead>
+            <TableHead className="text-xs font-medium h-9">ASSIGNED TO</TableHead>
+            <TableHead className="text-xs font-medium h-9">ASSIGNED DATE</TableHead>
+            <TableHead className="text-xs font-medium h-9">CONDITION</TableHead>
+            <TableHead className="text-xs font-medium h-9 text-right">ACTIONS</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {assignments.map((assignment: any) => (
+            <TableRow key={assignment.id} className="hover:bg-muted/50">
+              <TableCell className="font-medium text-sm py-2">
+                {assignment.assets?.name || "Unknown"}
+              </TableCell>
+              <TableCell className="py-2">
+                {assignment.assets?.asset_type && (
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {assignment.assets.asset_type}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => returnAsset.mutate(assignment.id)}
-                    disabled={returnAsset.isPending}
-                  >
-                    {returnAsset.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Return
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                )}
+              </TableCell>
+              <TableCell className="py-2">
+                <div>
+                  <div className="font-medium text-sm">{assignment.users?.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {assignment.users?.email}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground py-2">
+                {format(new Date(assignment.assigned_at), "MMM d, yyyy")}
+              </TableCell>
+              <TableCell className="py-2">
+                <Badge variant="secondary" className="text-xs capitalize">
+                  {assignment.condition_at_assignment || "N/A"}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right py-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7"
+                  onClick={() => returnAsset.mutate(assignment.id)}
+                  disabled={returnAsset.isPending}
+                >
+                  {returnAsset.isPending && (
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  )}
+                  Return
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };

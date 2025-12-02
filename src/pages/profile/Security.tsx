@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ProfileSidebar } from "@/components/Profile/ProfileSidebar";
 import { ProfileCard } from "@/components/Profile/ProfileCard";
-import Navbar from "@/components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Shield, Lock, Key, Smartphone, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { ChangePasswordDialog } from "@/components/Profile/ChangePasswordDialog";
 import { TwoFactorDialog } from "@/components/Profile/TwoFactorDialog";
 import { RecoveryOptionsDialog } from "@/components/Profile/RecoveryOptionsDialog";
 import { ManageDevicesDialog } from "@/components/Profile/ManageDevicesDialog";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 const Security = () => {
   const {
     user
@@ -35,12 +33,7 @@ const Security = () => {
     },
     enabled: !!user?.id
   });
-  return <div className="h-screen bg-background overflow-hidden">
-      <Navbar />
-      <div className="flex pt-14 h-full overflow-hidden">
-        <ProfileSidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+  return <div className="py-4 space-y-4">
           <div>
             <h1 className="text-2xl font-normal">Security</h1>
             
@@ -75,15 +68,13 @@ const Security = () => {
                   <Smartphone className="h-6 w-6 text-orange-600" />
                 </div>} actionLabel="Manage devices" onAction={() => setIsDevicesDialogOpen(true)} />
           </div>
-        </div>
-      </main>
 
       {/* Dialogs */}
       <ChangePasswordDialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} />
       <TwoFactorDialog open={isTwoFactorDialogOpen} onOpenChange={setIsTwoFactorDialogOpen} />
       <RecoveryOptionsDialog open={isRecoveryDialogOpen} onOpenChange={setIsRecoveryDialogOpen} />
       <ManageDevicesDialog open={isDevicesDialogOpen} onOpenChange={setIsDevicesDialogOpen} />
-      </div>
     </div>;
 };
+
 export default Security;

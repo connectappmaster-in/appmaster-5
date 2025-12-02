@@ -1,15 +1,13 @@
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
 import { useHelpdeskStats } from "@/hooks/useHelpdeskStats";
 import { useITAMStats } from "@/hooks/useITAMStats";
-import { useSRMStats } from "@/hooks/useSRMStats";
 import { Loader2 } from "lucide-react";
 
 export function SystemHealthMetrics() {
   const { data: ticketStats, isLoading: ticketsLoading } = useHelpdeskStats();
   const { data: assetStats, isLoading: assetsLoading } = useITAMStats();
-  const { data: srmStats, isLoading: srmLoading } = useSRMStats();
 
-  if (ticketsLoading || assetsLoading || srmLoading) {
+  if (ticketsLoading || assetsLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -33,14 +31,6 @@ export function SystemHealthMetrics() {
         : "0%",
       trend: assetStats && assetStats.assigned > assetStats.totalAssets * 0.5 ? "up" : "stable",
       description: `${assetStats?.assigned || 0} assigned of ${assetStats?.totalAssets || 0} total`
-    },
-    {
-      label: "SRM Fulfillment",
-      value: srmStats
-        ? `${((srmStats.fulfilled / (srmStats.total || 1)) * 100).toFixed(0)}%`
-        : "0%",
-      trend: srmStats && srmStats.pending < 5 ? "up" : "stable",
-      description: `${srmStats?.pending || 0} pending requests`
     },
     {
       label: "SLA Compliance",

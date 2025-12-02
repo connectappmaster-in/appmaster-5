@@ -3,22 +3,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ProfileSidebar } from "@/components/Profile/ProfileSidebar";
-import Navbar from "@/components/Navbar";
+import { ProfileCard } from "@/components/Profile/ProfileCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Edit, Save, X } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 
 const PersonalInfo = () => {
-  const { user, userType } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     phone: "",
   });
 
@@ -37,201 +36,155 @@ const PersonalInfo = () => {
     enabled: !!user?.id,
   });
 
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user?.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
   useEffect(() => {
     if (!isEditing && userData) {
       setFormData({
         name: userData.name || "",
+        email: userData.email || "",
         phone: userData.phone || "",
       });
     }
   }, [userData, isEditing]);
 
-  const updateMutation = useMutation({
+  const updateProfileMutation = useMutation({
     mutationFn: async (data: { name: string; phone: string }) => {
-      const { data: updated, error } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("users")
-        .update({ name: data.name, phone: data.phone })
+        .update({
+          name: data.name,
+          phone: data.phone,
+        })
         .eq("auth_user_id", user?.id)
-        .select()
+        .select("id, name, phone, email")
         .single();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
       return updated;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-profile", user?.id] });
-      toast({ title: "Profile updated", description: "Your changes have been saved." });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["user-profile", user?.id],
+      });
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved.",
+      });
       setIsEditing(false);
     },
     onError: (error: any) => {
       toast({
         title: "Update failed",
-        description: error.message,
+        description: error.message || "Failed to update profile",
         variant: "destructive",
       });
     },
   });
 
-  const getInitials = () => {
-    if (!formData.name) return "U";
-    return formData.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const handleSave = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter your full name before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateProfileMutation.mutate({
+      name: formData.name,
+      phone: formData.phone,
+    });
+  };
+
+  const handleCancel = () => {
+    if (userData) {
+      setFormData({
+        name: userData.name || "",
+        email: userData.email || "",
+        phone: userData.phone || "",
+      });
+    }
+    setIsEditing(false);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex pt-14">
-          <ProfileSidebar />
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="w-6 h-6 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-background overflow-hidden">
-      <Navbar />
-      <div className="flex pt-14 h-full overflow-hidden">
-        <ProfileSidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-3 space-y-3">
-          <div>
-            <h1 className="text-xl font-normal">Personal info</h1>
-          </div>
+    <div className="py-4 space-y-4">
+      <div>
+        <h1 className="text-2xl font-normal">Personal info</h1>
+        <p className="text-muted-foreground mt-1">
+          Info about you and your preferences across AppMaster services
+        </p>
+      </div>
 
-          {/* Profile Picture Section */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Profile Picture</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-4 pb-4">
-              <Avatar className="h-16 w-16 border-2 border-primary/20">
-                <AvatarImage src={profile?.avatar_url || ""} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-xl font-bold">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <Button variant="outline" size="sm">Change photo</Button>
-            </CardContent>
-          </Card>
-
-          {/* Basic Info Section */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Basic info</CardTitle>
-              {!isEditing && (
-                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm" className="gap-2">
-                  <Edit className="h-4 w-4" />
-                  Edit
-                </Button>
+      <div className="grid gap-4">
+        <ProfileCard
+          title="Your profile info"
+          description="Personal info and options to manage it"
+          icon={
+            <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center">
+              <User className="h-6 w-6 text-blue-600" />
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              {isEditing ? (
+                <Input
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Enter your full name"
+                />
+              ) : (
+                <p className="text-sm">{formData.name || "Not set"}</p>
               )}
-            </CardHeader>
-            <CardContent className="space-y-3 pb-4">
-              <div className="grid gap-3 max-w-xs">
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Name</Label>
-                  {isEditing ? (
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Enter your name"
-                      className="h-9"
-                    />
-                  ) : (
-                    <p className="text-sm py-1.5 px-3 bg-muted/20 rounded-md">
-                      {formData.name || "-"}
-                    </p>
-                  )}
-                </div>
+            </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Email</Label>
-                  <p className="text-sm py-1.5 px-3 bg-muted/20 rounded-md">
-                    {userData?.email || user?.email}
-                  </p>
-                </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <p className="text-sm text-muted-foreground">{formData.email}</p>
+            </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Phone</Label>
-                  {isEditing ? (
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="Enter your phone"
-                      className="h-9"
-                    />
-                  ) : (
-                    <p className="text-sm py-1.5 px-3 bg-muted/20 rounded-md">
-                      {formData.phone || "-"}
-                    </p>
-                  )}
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              {isEditing ? (
+                <Input
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  placeholder="Enter phone number"
+                />
+              ) : (
+                <p className="text-sm">{formData.phone || "Not set"}</p>
+              )}
+            </div>
 
-              {isEditing && (
-                <div className="flex justify-end gap-2 pt-3 border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsEditing(false);
-                      if (userData) {
-                        setFormData({
-                          name: userData.name || "",
-                          phone: userData.phone || "",
-                        });
-                      }
-                    }}
-                  >
-                    <X className="h-4 w-4 mr-1" />
+            <div className="flex gap-2">
+              {isEditing ? (
+                <>
+                  <Button onClick={handleSave} disabled={updateProfileMutation.isPending}>
+                    {updateProfileMutation.isPending ? "Saving..." : "Save"}
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel}>
                     Cancel
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => updateMutation.mutate(formData)}
-                    disabled={updateMutation.isPending}
-                  >
-                    {updateMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-1" />
-                        Save
-                      </>
-                    )}
-                  </Button>
-                </div>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)}>Edit</Button>
               )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            </div>
+          </div>
+        </ProfileCard>
       </div>
     </div>
   );

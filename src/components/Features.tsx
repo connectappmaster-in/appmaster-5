@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { BarChart3, Package, FileText, Users, Ticket, Briefcase, Calendar, ShoppingCart } from "lucide-react";
+import { BarChart3, FileText, Users, Ticket } from "lucide-react";
 const Features = () => {
   const products = [{
     icon: BarChart3,
@@ -26,18 +26,6 @@ const Features = () => {
     description: "Provide excellent customer support with organized ticket management",
     color: "from-cyan-500 to-cyan-600",
     path: "/apps/helpdesk"
-  }, {
-    icon: Briefcase,
-    title: "Asset Management",
-    description: "Track business assets, calculate depreciation, and manage asset lifecycle",
-    color: "from-green-500 to-green-600",
-    path: "/apps/assets"
-  }, {
-    icon: Package,
-    title: "Subscriptions",
-    description: "Manage subscriptions, track renewals, and control access to tools",
-    color: "from-rose-500 to-rose-600",
-    path: "/apps/subscriptions"
   }];
   return <section className="py-24 px-4 bg-background relative overflow-hidden">
       {/* Background Elements */}
