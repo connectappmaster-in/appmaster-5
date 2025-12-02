@@ -1539,6 +1539,306 @@ export type Database = {
         }
         Relationships: []
       }
+      device_actions: {
+        Row: {
+          action_payload: Json
+          action_type: string
+          approved_at: string | null
+          approved_by: string | null
+          artifacts_url: string | null
+          completed_at: string | null
+          created_at: string | null
+          device_id: string
+          exit_code: number | null
+          id: string
+          initiated_by: string
+          is_deleted: boolean | null
+          organisation_id: string | null
+          priority: string | null
+          requires_approval: boolean | null
+          result: Json | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string
+          stderr: string | null
+          stdout: string | null
+          tenant_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          action_payload?: Json
+          action_type: string
+          approved_at?: string | null
+          approved_by?: string | null
+          artifacts_url?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          device_id: string
+          exit_code?: number | null
+          id?: string
+          initiated_by: string
+          is_deleted?: boolean | null
+          organisation_id?: string | null
+          priority?: string | null
+          requires_approval?: boolean | null
+          result?: Json | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          stderr?: string | null
+          stdout?: string | null
+          tenant_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          artifacts_url?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          device_id?: string
+          exit_code?: number | null
+          id?: string
+          initiated_by?: string
+          is_deleted?: boolean | null
+          organisation_id?: string | null
+          priority?: string | null
+          requires_approval?: boolean | null
+          result?: Json | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          stderr?: string | null
+          stdout?: string | null
+          tenant_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_actions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_actions_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_actions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_audit_log: {
+        Row: {
+          action_id: string | null
+          created_at: string | null
+          device_id: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          initiated_by: string | null
+          ip_address: unknown
+          organisation_id: string | null
+          tenant_id: number
+          user_agent: string | null
+        }
+        Insert: {
+          action_id?: string | null
+          created_at?: string | null
+          device_id: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          initiated_by?: string | null
+          ip_address?: unknown
+          organisation_id?: string | null
+          tenant_id: number
+          user_agent?: string | null
+        }
+        Update: {
+          action_id?: string | null
+          created_at?: string | null
+          device_id?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          initiated_by?: string | null
+          ip_address?: unknown
+          organisation_id?: string | null
+          tenant_id?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_audit_log_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "device_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_audit_log_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_audit_log_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_heartbeats: {
+        Row: {
+          agent_version: string | null
+          created_at: string | null
+          current_task_id: string | null
+          current_task_status: string | null
+          device_id: string
+          heartbeat_at: string | null
+          id: string
+          organisation_id: string | null
+          system_health: Json | null
+          tenant_id: number
+        }
+        Insert: {
+          agent_version?: string | null
+          created_at?: string | null
+          current_task_id?: string | null
+          current_task_status?: string | null
+          device_id: string
+          heartbeat_at?: string | null
+          id?: string
+          organisation_id?: string | null
+          system_health?: Json | null
+          tenant_id: number
+        }
+        Update: {
+          agent_version?: string | null
+          created_at?: string | null
+          current_task_id?: string | null
+          current_task_status?: string | null
+          device_id?: string
+          heartbeat_at?: string | null
+          id?: string
+          organisation_id?: string | null
+          system_health?: Json | null
+          tenant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_heartbeats_current_task_id_fkey"
+            columns: ["current_task_id"]
+            isOneToOne: false
+            referencedRelation: "device_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_heartbeats_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_heartbeats_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_heartbeats_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_tokens: {
+        Row: {
+          created_at: string | null
+          device_id: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          organisation_id: string | null
+          revoked: boolean | null
+          tenant_id: number
+          token_hash: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id: string
+          expires_at: string
+          id?: string
+          last_used_at?: string | null
+          organisation_id?: string | null
+          revoked?: boolean | null
+          tenant_id: number
+          token_hash: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          organisation_id?: string | null
+          revoked?: boolean | null
+          tenant_id?: number
+          token_hash?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "system_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_tokens_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_tokens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       helpdesk_automation_logs: {
         Row: {
           error_message: string | null
