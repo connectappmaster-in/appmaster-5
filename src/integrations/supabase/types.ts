@@ -6152,6 +6152,7 @@ export type Database = {
           last_update_install: string | null
           last_update_scan: string | null
           notes: string | null
+          organisation_id: string | null
           os_build: string | null
           os_type: string
           os_version: string | null
@@ -6173,6 +6174,7 @@ export type Database = {
           last_update_install?: string | null
           last_update_scan?: string | null
           notes?: string | null
+          organisation_id?: string | null
           os_build?: string | null
           os_type: string
           os_version?: string | null
@@ -6194,6 +6196,7 @@ export type Database = {
           last_update_install?: string | null
           last_update_scan?: string | null
           notes?: string | null
+          organisation_id?: string | null
           os_build?: string | null
           os_type?: string
           os_version?: string | null
@@ -6204,7 +6207,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "system_devices_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_installed_updates: {
         Row: {
